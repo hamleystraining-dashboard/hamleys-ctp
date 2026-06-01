@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTP Admin Config — Hamleys</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#E8202A;--red-dark:#b51820;--red-light:#fde8e9;
+  --gold:#F5A623;--gold-light:#fff8ec;
+  --green:#1DB954;--green-light:#e6f9ed;
+  --cream:#FDF6EC;--cream2:#FFF9F0;
+  --gray-100:#F3F4F6;--gray-200:#E5E7EB;--gray-300:#D1D5DB;
+  --gray-400:#9CA3AF;--gray-500:#6B7280;--gray-700:#374151;--gray-900:#111827;
+  --white:#FFFFFF;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.08);--shadow-md:0 4px 16px rgba(0,0,0,.1);
+  --r:12px;--r-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito Sans',sans-serif;background:var(--cream);color:var(--gray-900);min-height:100vh;}
+
+.sidebar{
+  position:fixed;top:0;left:0;width:220px;height:100vh;background:var(--red);
+  display:flex;flex-direction:column;align-items:center;padding:24px 0 20px;z-index:50;
+  box-shadow:4px 0 20px rgba(232,32,42,.25);
+}
+.logo-text{font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;color:var(--white);letter-spacing:-.5px;text-align:center;line-height:1.1;}
+.logo-text span{display:block;font-size:11px;font-weight:600;opacity:.75;letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+.sidebar-nav{width:100%;padding:0 12px;flex:1;margin-top:24px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--r-sm);color:rgba(255,255,255,.8);font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s;margin-bottom:4px;font-family:'Nunito',sans-serif;}
+.nav-item:hover{background:rgba(255,255,255,.15);color:var(--white);}
+.nav-item.active{background:var(--white);color:var(--red);}
+.nav-item .icon{font-size:16px;width:20px;text-align:center;}
+.sidebar-bottom{padding:16px 12px;width:100%;}
+.back-btn{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:var(--white);padding:9px 14px;border-radius:var(--r-sm);font-size:12.5px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Nunito',sans-serif;width:100%;justify-content:center;text-decoration:none;}
+.back-btn:hover{background:rgba(255,255,255,.25);}
+
+.main{margin-left:220px;min-height:100vh;}
+.topbar{background:var(--white);border-bottom:1px solid var(--gray-200);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;box-shadow:var(--shadow-sm);}
+.topbar-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:18px;color:var(--gray-900);}
+.topbar-sub{font-size:12px;color:var(--gray-500);margin-top:2px;}
+.btn{padding:7px 16px;border-radius:var(--r-sm);font-size:13px;font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;border:none;transition:all .15s;}
+.btn-red{background:var(--red);color:var(--white);}
+.btn-red:hover{background:var(--red-dark);}
+.btn-outline{background:var(--white);color:var(--gray-700);border:1.5px solid var(--gray-200);}
+.btn-outline:hover{border-color:var(--red);color:var(--red);}
+
+.content{padding:28px;}
+.section{background:var(--white);border:1.5px solid var(--gray-200);border-radius:var(--r);padding:24px;margin-bottom:22px;box-shadow:var(--shadow-sm);}
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.section h3{font-family:'Nunito',sans-serif;font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px;color:var(--gray-900);}
+.section p{font-size:13px;color:var(--gray-500);margin-bottom:16px;line-height:1.6;}
+
+/* Upload zone */
+.upload-zone{border:2px dashed var(--gray-300);border-radius:var(--r);padding:32px;text-align:center;cursor:pointer;transition:all .15s;background:var(--gray-50);}
+.upload-zone:hover{border-color:var(--red);background:var(--red-light);}
+.upload-zone .uz-icon{font-size:36px;margin-bottom:10px;}
+.upload-zone .uz-main{font-weight:700;color:var(--gray-700);font-size:14px;margin-bottom:4px;}
+.upload-zone .uz-sub{font-size:12px;color:var(--gray-400);}
+.upload-zone strong{color:var(--red);}
+.status-box{border-radius:var(--r-sm);padding:10px 14px;font-size:12.5px;margin-top:12px;line-height:1.6;}
+.status-info{background:var(--gold-light);border:1.5px solid #fcd34d;color:#92400e;}
+.status-ok{background:var(--green-light);border:1.5px solid #86efac;color:#166534;}
+.status-err{background:var(--red-light);border:1.5px solid #fca5a5;color:#991b1b;}
+
+/* Store data preview */
+.preview-table-wrap{overflow-x:auto;margin-top:14px;border-radius:var(--r-sm);border:1.5px solid var(--gray-200);}
+.preview-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.preview-table th{background:var(--red);color:var(--white);padding:8px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.preview-table td{padding:8px 12px;border-bottom:1px solid var(--gray-100);}
+.preview-table tr:last-child td{border-bottom:none;}
+.preview-table tr:hover td{background:var(--cream2);}
+
+/* Day 0 table */
+.d0-table{width:100%;border-collapse:collapse;font-size:13px;}
+.d0-table th{text-align:left;padding:9px 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-500);border-bottom:1.5px solid var(--gray-200);background:var(--gray-50);}
+.d0-table td{padding:9px 12px;border-bottom:1px solid var(--gray-100);vertical-align:middle;}
+.d0-table tr:last-child td{border-bottom:none;}
+.d0-table input[type=date]{border:1.5px solid var(--gray-200);border-radius:6px;padding:5px 9px;font-size:12.5px;font-family:'Nunito Sans',sans-serif;color:var(--gray-700);}
+.d0-table input[type=date]:focus{outline:none;border-color:var(--red);}
+.d0-table .changed{background:#fffbeb;}
+.d0-changed-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gold);margin-left:5px;vertical-align:middle;}
+
+.fc-name-cell{font-weight:600;font-family:'Nunito',sans-serif;}
+.fc-store-cell{font-size:11px;color:var(--gray-500);margin-top:2px;}
+.w1-preview{font-size:11.5px;font-weight:700;color:var(--red);}
+
+.actions-bar{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid var(--gray-200);}
+.search-box{border:1.5px solid var(--gray-200);border-radius:var(--r-sm);padding:7px 11px;font-size:13px;font-family:'Nunito Sans',sans-serif;color:var(--gray-700);width:220px;}
+.search-box:focus{outline:none;border-color:var(--red);}
+
+.info-callout{background:linear-gradient(135deg,#fff8ec,#fff3d6);border:1.5px solid #fcd34d;border-radius:var(--r-sm);padding:14px 16px;margin-bottom:20px;}
+.info-callout p{font-size:13px;color:#92400e;line-height:1.6;margin:0;}
+.info-callout strong{font-weight:700;}
+
+.saved-toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--green);color:var(--white);
+  padding:12px 20px;border-radius:var(--r-sm);
+  font-weight:700;font-size:14px;font-family:'Nunito',sans-serif;
+  box-shadow:var(--shadow-md);
+  transform:translateY(80px);opacity:0;
+  transition:all .3s;z-index:999;
+}
+.saved-toast.show{transform:translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo-text">⭐ Hamleys<span>Admin Config</span></div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" onclick="showSection('day0')" id="nav-day0"><span class="icon">📅</span>Set Day 0</div>
+    <div class="nav-item" onclick="showSection('storedata')" id="nav-storedata"><span class="icon">🏪</span>Store Data</div>
+    <div class="nav-item" onclick="showSection('csvupload')" id="nav-csvupload"><span class="icon">📄</span>Upload Responses</div>
+    <div class="nav-item" onclick="showSection('livesetup')" id="nav-livesetup"><span class="icon">🔗</span>Live Data Setup</div>
+  </nav>
+  <div class="sidebar-bottom">
+    <a href="certified_to_play_dashboard.html" class="back-btn">← Back to Dashboard</a>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">⚙ Admin Configuration</div>
+      <div class="topbar-sub">Manage Day 0 settings, store mappings & data uploads</div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-outline" onclick="resetDay0()">↺ Reset All Day 0</button>
+      <button class="btn btn-red" onclick="saveDay0()">💾 Save All Changes</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DAY 0 SECTION -->
+    <div id="sec-day0">
+      <div class="info-callout">
+        <p><strong>How Day 0 works:</strong> Day 0 is the official start of the FC's 6-week Certified to Play journey. All assessment windows are calculated from this date — Week 1 assessment = Day 0 + 8 days (extra day for Induction), then +7 days each week, all snapped to the nearest Friday. Set Day 0 to a Friday to keep assessments consistently on Fridays.</p>
+      </div>
+      <div class="section">
+        <div class="section-hdr">
+          <h3>📅 Set Day 0 Per FC</h3>
+          <input type="text" class="search-box" placeholder="Search FC name or store…" id="d0Search" oninput="filterD0Table()">
+        </div>
+        <p>All changes are saved to your browser and persist across sessions. Yellow rows indicate modified Day 0 values.</p>
+        <div style="overflow-x:auto;">
+          <table class="d0-table">
+            <thead>
+              <tr>
+                <th>#</th><th>FC Name</th><th>Store · SD</th><th>DOJ</th>
+                <th>Day 0 <span style="font-weight:400;text-transform:none;letter-spacing:0">(set to Friday)</span></th>
+                <th>W1 Assessment</th><th>W2 Assessment</th><th>W3 Assessment</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="d0Tbody"></tbody>
+          </table>
+        </div>
+        <div class="actions-bar">
+          <button class="btn btn-outline" onclick="resetDay0()">↺ Reset All to Original</button>
+          <button class="btn btn-red" onclick="saveDay0()">💾 Save Day 0 Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STORE DATA SECTION -->
+    <div id="sec-storedata" style="display:none;">
+      <div class="section">
+        <h3>🏪 Upload Base Store Data</h3>
+        <p>Upload a CSV with the latest ROM/SD/Store mappings. This updates the dashboard's store-to-ROM and store-to-SD relationships. Required columns: <code style="background:var(--gray-100);padding:1px 5px;border-radius:4px;font-size:12px;color:#b51820">Store Name, Store Code, ROM Name, SD Name</code></p>
+        <div class="upload-zone" onclick="document.getElementById('storeCSVInput').click()">
+          <div class="uz-icon">🏪</div>
+          <div class="uz-main"><strong>Click to upload Base Store Data CSV</strong></div>
+          <div class="uz-sub">Export from Excel as CSV · Columns: Store Name, Store Code, ROM Name, SD Name</div>
+        </div>
+        <input type="file" id="storeCSVInput" accept=".csv" style="display:none" onchange="loadStoreCSV(event)">
+        <div class="status-box status-info" id="storeStatus">No file uploaded — currently using embedded store data (last updated with dashboard build).</div>
+        <div id="storePreview"></div>
+      </div>
+    </div>
+
+    <!-- CSV UPLOAD SECTION -->
+    <div id="sec-csvupload" style="display:none;">
+      <div class="section">
+        <h3>📄 Upload MS Forms Responses CSV</h3>
+        <p>Export the MS Forms responses Excel as CSV and upload here to refresh all FC data in the dashboard. The dashboard will use this data until the page is refreshed or a new file is uploaded.</p>
+        <div class="upload-zone" onclick="document.getElementById('responsesCSVInput').click()">
+          <div class="uz-icon">📊</div>
+          <div class="uz-main"><strong>Click to upload Responses CSV</strong></div>
+          <div class="uz-sub">Export "Certified To Play.xlsx" as CSV · Must include all response columns</div>
+        </div>
+        <input type="file" id="responsesCSVInput" accept=".csv" style="display:none" onchange="loadResponsesCSV(event)">
+        <div class="status-box status-info" id="responsesStatus">No responses uploaded — dashboard is using embedded data.</div>
+        <div style="margin-top:20px;padding:16px;background:var(--gray-50);border-radius:var(--r-sm);border:1.5px solid var(--gray-200);">
+          <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-500);margin-bottom:10px;">Required CSV Columns</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${['Name','Emp Code','Desgn','Store','Region','Store Code','SD','ROM','DOJ','Day 0','Demo','CSD','Product','Selling','VM','Billing','Remarks'].map(c=>`<code style="background:var(--white);border:1px solid var(--gray-200);padding:3px 8px;border-radius:4px;font-size:12px;">${c}</code>`).join('')}
+          </div>
+          <div style="margin-top:10px;font-size:12px;color:var(--gray-500);">Week values: <strong>1</strong> = Pass · <strong>0</strong> = Reassessment · blank = Not yet assessed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE SETUP SECTION -->
+    <div id="sec-livesetup" style="display:none;">
+      <div class="section">
+        <h3>🔗 Power Automate → GitHub Live Data Setup</h3>
+        <p>Set up fully automated live data flow — no uploads, no manual steps. Every MS Form submission updates the dashboard within ~30 seconds.</p>
+        <ol style="padding-left:20px;font-size:13px;color:var(--gray-700);line-height:2.2;">
+          <li>Create a GitHub repo e.g. <code style="background:var(--gray-100);padding:1px 6px;border-radius:4px;font-size:12px;color:#b51820">hamleys-ctp-data</code>. Add file <code style="background:var(--gray-100);padding:1px 6px;border-radius:4px;font-size:12px;color:#b51820">data/responses.json</code> with placeholder <code style="background:var(--gray-100);padding:1px 6px;border-radius:4px;font-size:12px;color:#b51820">[]</code>.</li>
+          <li>Enable GitHub Pages: Settings → Pages → Deploy from main branch. Your dashboard URL: <code style="background:var(--gray-100);padding:1px 6px;border-radius:4px;font-size:12px;color:#b51820">https://[org].github.io/hamleys-ctp-data/</code></li>
+          <li>Place <code style="background:var(--gray-100);padding:1px 6px;border-radius:4px;font-size:12px;color:#b51820">certified_to_play_dashboard.html</code> as <code style="background:var(--gray-100);padding:1px 6px;border-radius:4px;font-size:12px;color:#b51820">index.html</code> and <code style="background:var(--gray-100);padding:1px 6px;border-radius:4px;font-size:12px;color:#b51820">ctp_admin.html</code> in repo root.</li>
+          <li>Open <strong>flow.microsoft.com</strong> → New Automated Cloud Flow → Trigger: <em>"When a new response is submitted"</em> on your MS Form.</li>
+          <li>Add step: <strong>Excel Online (Business) → List rows present in a table</strong> pointing to your SharePoint responses Excel.</li>
+          <li>Add step: <strong>GitHub → Create or update file contents</strong> → path: <code style="background:var(--gray-100);padding:1px 6px;border-radius:4px;font-size:12px;color:#b51820">data/responses.json</code> → content: JSON-serialised rows from step 5.</li>
+          <li>Generate a GitHub Personal Access Token (Settings → Developer Settings → Fine-grained PAT → repo write scope) and paste into the GitHub connector.</li>
+          <li>In <code style="background:var(--gray-100);padding:1px 6px;border-radius:4px;font-size:12px;color:#b51820">certified_to_play_dashboard.html</code> set <code style="background:var(--gray-100);padding:1px 6px;border-radius:4px;font-size:12px;color:#b51820">GITHUB_JSON_URL</code> to your raw JSON URL.</li>
+          <li>Submit a test form entry and verify the dashboard updates automatically.</li>
+        </ol>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="saved-toast" id="toast">✅ Settings saved successfully!</div>
+
+<script>
+const WEEKS_KEYS=['demo','csd','product','selling','vm','billing'];
+const WEEKS_LBL=['Demo','CSD','Product','Selling','VM','Billing'];
+const THRESHOLDS=[7,15,22,29,36,43];
+
+// Load data from shared localStorage (written by dashboard)
+let RAW_DATA = [];
+let day0Overrides = {};
+try { day0Overrides = JSON.parse(localStorage.getItem('ctp_day0')||'{}'); } catch(e){}
+try { const d=localStorage.getItem('ctp_raw_data'); if(d) RAW_DATA=JSON.parse(d); } catch(e){}
+
+// Fallback embedded data if nothing in localStorage
+if (!RAW_DATA.length) {
+  RAW_DATA = [
+    {sr:1,name:"Mr. Suhail Khan",emp:"50199968",store:"Ham.Creekside",sd:"Lalit Mohan",rom:"Lalit Mohan",doj_date:"2026-05-04",day0_date:"2026-05-15",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:2,name:"Mr. Satyamsinh Rathod",emp:"50200071",store:"Ham.Vadoda",sd:"Virendra Rahevar",rom:"Shirish Mastud",doj_date:"2026-05-05",day0_date:"2026-05-15",demo:1,csd:1,product:null,selling:null,vm:null,billing:null},
+    {sr:3,name:"Ms. Yamunarani Pazhanisamy",emp:"50200221",store:"Ham.Forum",sd:"Damodharan",rom:"Divya Lakshmi",doj_date:"2026-05-08",day0_date:"2026-05-15",demo:1,csd:1,product:null,selling:null,vm:null,billing:null},
+    {sr:4,name:"Mr. Abhishek Kumar",emp:"50200247",store:"Ham.Elante",sd:"Harsh Sharma",rom:"Ajay Gill",doj_date:"2026-05-08",day0_date:"2026-05-15",demo:1,csd:1,product:null,selling:null,vm:null,billing:null},
+    {sr:5,name:"Mr. Deepak Kumar",emp:"50200250",store:"Ham.Amritsr",sd:"Lalit Mohan",rom:"Lalit Mohan",doj_date:"2026-05-08",day0_date:"2026-05-15",demo:1,csd:1,product:null,selling:null,vm:null,billing:null},
+    {sr:6,name:"Ms. Khushi Vinayak Naik",emp:"50200257",store:"Ham.MallofAsia",sd:"Umesh",rom:"Ashlin Moses",doj_date:"2026-05-08",day0_date:"2026-05-15",demo:1,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:7,name:"Mr. Divyanshu Paliwal",emp:"50200315",store:"Ham.Udaipur",sd:"Ajay Gill",rom:"Ajay Gill",doj_date:"2026-05-11",day0_date:"2026-05-15",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:8,name:"Ms. Senjam Rajpriya Chanu",emp:"50200424",store:"Ham.MallofAsia",sd:"Umesh",rom:"Ashlin Moses",doj_date:"2026-05-12",day0_date:"2026-05-22",demo:1,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:9,name:"Ms. Urvashi Shantly",emp:"50200434",store:"Ham.Modeltown",sd:"Lalit Mohan",rom:"Lalit Mohan",doj_date:"2026-05-12",day0_date:"2026-05-22",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:10,name:"Mr. Prasad Lakshmi kota",emp:"50200444",store:"Ham.GatewayHyd",sd:"Narayana",rom:"Ashlin Moses",doj_date:"2026-05-12",day0_date:"2026-05-22",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:11,name:"Mr. Kaif Mohammed",emp:"50200449",store:"Ham.T2 Arri",sd:"Nasir Shaikh",rom:"Shirish Mastud",doj_date:"2026-05-12",day0_date:"2026-05-22",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:12,name:"Mr. Altamash Patil",emp:"50200456",store:"Ham.Falcon.Bglr",sd:"Umesh",rom:"Ashlin Moses",doj_date:"2026-05-12",day0_date:"2026-05-22",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:13,name:"Mr. Kalaiyarasan R",emp:"50200476",store:"Ham.Express",sd:"Divya Lakshmi",rom:"Divya Lakshmi",doj_date:"2026-05-12",day0_date:"2026-05-22",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:14,name:"Ms. Donahliu Newmai",emp:"50200511",store:"Ham.BanjaraHill",sd:"Ashlin Moses",rom:"Ashlin Moses",doj_date:"2026-05-13",day0_date:"2026-05-22",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:15,name:"Mr. Santhosh K",emp:"50200590",store:"Ham.BlrArpt.T2",sd:"Umesh",rom:"Ashlin Moses",doj_date:"2026-05-15",day0_date:"2026-05-22",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:16,name:"Mr. Zaid Muhammad",emp:"50200606",store:"Ham.T2 Arri",sd:"Nasir Shaikh",rom:"Shirish Mastud",doj_date:"2026-05-15",day0_date:"2026-05-22",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:17,name:"Ms. Flora Rohan abhang",emp:"50200608",store:"Ham.MOM",sd:"Subodh",rom:"Chetan Chaudhari",doj_date:"2026-05-15",day0_date:"2026-05-22",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:18,name:"Mr. Sujeet Paswan",emp:"50200625",store:"Ham.Vngr.Jaipur",sd:"Shashank Rathore",rom:"Ajay Gill",doj_date:"2026-05-15",day0_date:"2026-05-22",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:19,name:"Ms. Pooja Arun Dube",emp:"50200637",store:"Ham.KurlaPMC",sd:"Almas Zaidi",rom:"Shirish Mastud",doj_date:"2026-05-15",day0_date:"2026-05-22",demo:1,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:20,name:"Mr. Yadul Shaik",emp:"50200639",store:"Ham.GatewayHyd",sd:"Narayana",rom:"Ashlin Moses",doj_date:"2026-05-15",day0_date:"2026-05-22",demo:1,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:21,name:"Mr. Harsh H",emp:"50200868",store:"Ham.City",sd:"Harsh Sharma",rom:"Ajay Gill",doj_date:"2026-05-19",day0_date:"2026-05-22",demo:0,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:22,name:"Ms. Payal P",emp:"50201072",store:"Ham.City",sd:"Harsh Sharma",rom:"Ajay Gill",doj_date:"2026-05-22",day0_date:"2026-05-29",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:23,name:"Mr. Shoaib Akhtar",emp:"50201077",store:"Ham.AVKDel",sd:"Ajay Gill",rom:"Ajay Gill",doj_date:"2026-05-22",day0_date:"2026-05-29",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:24,name:"Mr. Raj Sunil patel",emp:"50201080",store:"Ham.Infinty",sd:"Almas Zaidi",rom:"Shirish Mastud",doj_date:"2026-05-22",day0_date:"2026-05-29",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:25,name:"Ms. Nabina Khatri",emp:"50201093",store:"Ham.Surat",sd:"Virendra Rahevar",rom:"Shirish Mastud",doj_date:"2026-05-22",day0_date:"2026-05-29",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:26,name:"Ms. Gayatri K madkaikar",emp:"50201104",store:"Ham.MallDe",sd:"Nasir Shaikh",rom:"Shirish Mastud",doj_date:"2026-05-22",day0_date:"2026-05-29",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:27,name:"Ms. Ambika A",emp:"50201213",store:"Ham.City",sd:"Harsh Sharma",rom:"Ajay Gill",doj_date:"2026-05-26",day0_date:"2026-05-29",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:28,name:"Mr. Siddharth Thakur",emp:"50201237",store:"Ham.KOPA.Pune",sd:"Subodh",rom:"Chetan Chaudhari",doj_date:"2026-05-26",day0_date:"2026-05-29",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:29,name:"Mr. Arjun Panday",emp:"50201247",store:"Ham.Unity",sd:"Harsh Sharma",rom:"Ajay Gill",doj_date:"2026-05-26",day0_date:"2026-05-29",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:30,name:"Ms. Shilpi Devi",emp:"50201255",store:"Ham.AVKDel",sd:"Ajay Gill",rom:"Ajay Gill",doj_date:"2026-05-26",day0_date:"2026-05-29",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:31,name:"Mr. Bupendra Vasu rayudu",emp:"50201259",store:"Ham.Sarathi",sd:"Ashlin Moses",rom:"Ashlin Moses",doj_date:"2026-05-26",day0_date:"2026-05-29",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:32,name:"Ms. Priti P",emp:"50201263",store:"Ham.Unity",sd:"Harsh Sharma",rom:"Ajay Gill",doj_date:"2026-05-26",day0_date:"2026-05-29",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:33,name:"Ms. Pavithra P",emp:"61116347",store:"Ham.Prozone",sd:"Damodharan",rom:"Divya Lakshmi",doj_date:"2026-05-12",day0_date:"2026-05-29",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:34,name:"Ms. Rajeswari M",emp:"61117572",store:"Ham.Express",sd:"Divya Lakshmi",rom:"Divya Lakshmi",doj_date:"2026-05-19",day0_date:"2026-05-29",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+    {sr:35,name:"Mr. Bhagyashree Uday kini",emp:"61119038",store:"Ham.IndrNgr.Blr",sd:"Harnest",rom:"Ashlin Moses",doj_date:"2026-05-26",day0_date:"2026-05-29",demo:null,csd:null,product:null,selling:null,vm:null,billing:null},
+  ];
+}
+
+function addDays(s,n){const d=new Date(s);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function nextFriday(s){
+  const d=new Date(s);const dow=d.getDay();
+  const diff=dow<5?5-dow:dow===5?0:6;
+  if(diff===0)return s;
+  d.setDate(d.getDate()+diff);return d.toISOString().slice(0,10);
+}
+function fmtDate(s){if(!s)return'—';const d=new Date(s);return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+function getAssessDates(day0){
+  if(!day0)return Array(6).fill(null);
+  // Day0 is always Friday, +7 = next Friday = W1 assessment
+  const dates=[nextFriday(addDays(day0,7))];
+  for(let i=1;i<6;i++) dates.push(nextFriday(addDays(dates[i-1],7)));
+  return dates;
+}
+
+let d0Filter = '';
+function filterD0Table() {
+  d0Filter = document.getElementById('d0Search').value.toLowerCase();
+  renderD0Table();
+}
+
+function renderD0Table() {
+  const tbody = document.getElementById('d0Tbody');
+  const filtered = RAW_DATA.filter(fc =>
+    !d0Filter || fc.name.toLowerCase().includes(d0Filter) || fc.store.toLowerCase().includes(d0Filter)
+  );
+  tbody.innerHTML = filtered.map(fc => {
+    const orig = fc.day0_date;
+    const cur = day0Overrides[fc.emp] || orig;
+    const isChanged = day0Overrides[fc.emp] && day0Overrides[fc.emp] !== orig;
+    const dates = getAssessDates(cur);
+    const statusDot = isChanged ? `<span class="d0-changed-dot" title="Modified from original"></span>` : '';
+    return `<tr class="${isChanged?'d0-changed':''}">
+      <td style="color:var(--gray-400);font-size:12px">${fc.sr}</td>
+      <td><div class="fc-name-cell">${fc.name}${statusDot}</div></td>
+      <td><div style="font-size:13px">${fc.store}</div><div class="fc-store-cell">SD: ${fc.sd}</div></td>
+      <td style="font-size:12px;color:var(--gray-500)">${fmtDate(fc.doj_date)}</td>
+      <td>
+        <input type="date" id="d0_${fc.emp}" value="${cur||''}" min="${fc.doj_date}"
+          onchange="markChanged('${fc.emp}', this.value)" style="min-width:150px">
+      </td>
+      <td><div class="w1-preview">${fmtDate(dates[0])}</div></td>
+      <td style="font-size:12px;color:var(--gray-500)">${fmtDate(dates[1])}</td>
+      <td style="font-size:12px;color:var(--gray-500)">${fmtDate(dates[2])}</td>
+      <td>${isChanged?'<span style="background:var(--gold-light);color:#92400e;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700;">Modified</span>':'<span style="color:var(--gray-300);font-size:12px">Original</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function markChanged(emp, val) {
+  if (val) day0Overrides[emp] = val;
+  else delete day0Overrides[emp];
+  renderD0Table();
+}
+
+function saveDay0() {
+  try {
+    localStorage.setItem('ctp_day0', JSON.stringify(day0Overrides));
+    showToast('✅ Day 0 settings saved! Dashboard will reflect changes on next load.');
+  } catch(e) { alert('Error saving settings.'); }
+}
+
+function resetDay0() {
+  if (!confirm('Reset ALL Day 0 values to original data from Excel? This cannot be undone.')) return;
+  day0Overrides = {};
+  try { localStorage.removeItem('ctp_day0'); } catch(e){}
+  renderD0Table();
+  showToast('↺ All Day 0 values reset to original.');
+}
+
+function loadStoreCSV(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const lines = e.target.result.split('\n').filter(l=>l.trim());
+      const hdrs = lines[0].split(',').map(h=>h.trim().replace(/"/g,'').toLowerCase());
+      const rows = lines.slice(1).map(line => {
+        const v = line.split(',').map(x=>x.trim().replace(/"/g,''));
+        const row={}; hdrs.forEach((h,j)=>row[h]=v[j]||''); return row;
+      }).filter(r=>r['store code']||r['storecode']);
+      document.getElementById('storeStatus').className='status-box status-ok';
+      document.getElementById('storeStatus').textContent=`✅ Loaded ${rows.length} stores from "${file.name}".`;
+      const preview = document.getElementById('storePreview');
+      preview.innerHTML=`<div class="preview-table-wrap"><table class="preview-table"><thead><tr><th>Store Code</th><th>Store Name</th><th>ROM</th><th>SD</th></tr></thead><tbody>${
+        rows.slice(0,10).map(r=>`<tr><td><strong>${r['store code']||r['storecode']||'—'}</strong></td><td>${r['store name']||r['storename']||'—'}</td><td>${r['rom name']||r['rom']||'—'}</td><td>${r['sd name']||r['sd']||'—'}</td></tr>`).join('')
+      }${rows.length>10?`<tr><td colspan="4" style="color:var(--gray-400);text-align:center;font-style:italic">…and ${rows.length-10} more stores</td></tr>`:''}</tbody></table></div>`;
+      try { localStorage.setItem('ctp_store_data', JSON.stringify(rows)); } catch(e){}
+    } catch(err) { document.getElementById('storeStatus').className='status-box status-err'; document.getElementById('storeStatus').textContent='❌ Error parsing CSV. Check column headers.'; }
+  };
+  reader.readAsText(file); event.target.value='';
+}
+
+function loadResponsesCSV(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const lines = e.target.result.split('\n').filter(l=>l.trim());
+      const hdrs = lines[0].split(',').map(h=>h.trim().replace(/"/g,'').toLowerCase());
+      const parsed = lines.slice(1).map((line,i) => {
+        const v = line.split(',').map(x=>x.trim().replace(/"/g,''));
+        const row={}; hdrs.forEach((h,j)=>row[h]=v[j]||'');
+        const p1 = k => row[k]===''?null:row[k]==='1'?1:row[k]==='0'?0:null;
+        return {sr:i+1,name:row['name']||'',emp:row['emp code']||'',desig:row['desgn']||'Fun Consultant',
+          store:row['store']||'',region:row['region']||'',code:row['store code']||'',
+          sd:row['sd']||'',rom:row['rom']||'',doj_date:row['doj']||'',day0_date:row['day 0']||'',
+          demo:p1('demo'),csd:p1('csd'),product:p1('product'),selling:p1('selling'),vm:p1('vm'),billing:p1('billing')};
+      }).filter(r=>r.name);
+      RAW_DATA = parsed;
+      const now = new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      try {
+        localStorage.setItem('ctp_raw_data', JSON.stringify(parsed));
+        localStorage.setItem('ctp_data_source', file.name);
+        localStorage.setItem('ctp_data_updated', now);
+      } catch(e){}
+      document.getElementById('responsesStatus').className='status-box status-ok';
+      document.getElementById('responsesStatus').innerHTML=`✅ <strong>${parsed.length} FC records</strong> loaded from <strong>"${file.name}"</strong> on ${now}.<br>The dashboard will use this data automatically — no need to upload again until the data changes.`;
+      renderD0Table();
+      showToast(`✅ ${parsed.length} FCs loaded! Dashboard is now updated.`);
+    } catch(err) {
+      document.getElementById('responsesStatus').className='status-box status-err';
+      document.getElementById('responsesStatus').textContent='❌ Error parsing CSV. Please check column headers match the required format below.';
+    }
+  };
+  reader.readAsText(file); event.target.value='';
+}
+
+function showSection(name) {
+  ['day0','storedata','csvupload','livesetup'].forEach(s => {
+    document.getElementById('sec-'+s).style.display = s===name?'block':'none';
+    document.getElementById('nav-'+s).classList.toggle('active', s===name);
+  });
+}
+function showToast(msg) {
+  const t = document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3500);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  // Show last upload status if data exists in localStorage
+  try {
+    const src = localStorage.getItem('ctp_data_source');
+    const upd = localStorage.getItem('ctp_data_updated');
+    if (src && upd) {
+      document.getElementById('responsesStatus').className='status-box status-ok';
+      document.getElementById('responsesStatus').innerHTML=`✅ Last upload: <strong>"${src}"</strong> on ${upd}. Dashboard is using this data. Upload a new file to refresh.`;
+    }
+  } catch(e){}
+  renderD0Table();
+});
+</script>
+</body>
+</html>
