@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTP Admin — Hamleys</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --red:#E8202A;--red-dark:#b51820;--red-light:#fde8e9;
+  --gold:#F5A623;--gold-dark:#c97d10;--gold-light:#fff8ec;
+  --green:#16a34a;--green-light:#dcfce7;
+  --amber:#d97706;--amber-light:#fef3c7;
+  --cream:#fdf8f2;
+  --g0:#f9fafb;--g1:#f3f4f6;--g2:#e5e7eb;--g3:#d1d5db;
+  --g4:#9ca3af;--g5:#6b7280;--g7:#374151;--g9:#111827;
+  --sh1:0 1px 4px rgba(0,0,0,.07);--sh2:0 4px 16px rgba(0,0,0,.09);
+  --r:12px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito Sans',sans-serif;background:var(--cream);color:var(--g9);min-height:100vh;}
+
+.sb{position:fixed;top:0;left:0;width:224px;height:100vh;background:var(--red);display:flex;flex-direction:column;z-index:60;box-shadow:3px 0 18px rgba(232,32,42,.22);}
+.sb-logo{padding:20px 16px 16px;text-align:center;border-bottom:1px solid rgba(255,255,255,.13);}
+.sb-logo .star{font-size:26px;}
+.sb-logo .name{font-family:'Nunito',sans-serif;font-weight:900;font-size:19px;color:#fff;margin-top:4px;}
+.sb-logo .sub{font-size:10px;font-weight:600;opacity:.7;letter-spacing:1.2px;text-transform:uppercase;margin-top:2px;color:#fff;}
+.sb-nav{flex:1;padding:14px 10px;}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:var(--rs);color:rgba(255,255,255,.8);font-size:13px;font-weight:600;cursor:pointer;transition:all .13s;margin-bottom:3px;font-family:'Nunito',sans-serif;}
+.ni:hover{background:rgba(255,255,255,.14);color:#fff;}
+.ni.on{background:#fff;color:var(--red);}
+.ni .ic{font-size:15px;width:18px;text-align:center;}
+.sb-foot{padding:12px 10px;border-top:1px solid rgba(255,255,255,.13);}
+.back-link{display:flex;align-items:center;justify-content:center;gap:7px;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.28);color:#fff;padding:9px;border-radius:var(--rs);font-size:12.5px;font-weight:700;text-decoration:none;font-family:'Nunito',sans-serif;transition:all .13s;}
+.back-link:hover{background:rgba(255,255,255,.24);}
+
+.main{margin-left:224px;min-height:100vh;}
+.tb{background:#fff;border-bottom:1px solid var(--g2);height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:50;box-shadow:var(--sh1);}
+.tb-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:17px;}
+.tb-sub{font-size:11.5px;color:var(--g4);margin-top:2px;}
+.btn{padding:7px 14px;border-radius:var(--rs);font-size:12.5px;font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;border:none;transition:all .13s;}
+.btn-red{background:var(--red);color:#fff;}.btn-red:hover{background:var(--red-dark);}
+.btn-ghost{background:#fff;color:var(--g7);border:1.5px solid var(--g2);}.btn-ghost:hover{border-color:var(--red);color:var(--red);}
+
+.pg{display:none;padding:22px 26px;}
+.pg.on{display:block;}
+.wrap{max-width:960px;}
+.wrap-lg{max-width:1100px;}
+
+.sec{background:#fff;border:1.5px solid var(--g2);border-radius:var(--r);padding:22px;margin-bottom:18px;box-shadow:var(--sh1);}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.sec h3{font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;color:var(--g9);}
+.sec p{font-size:12.5px;color:var(--g5);line-height:1.7;margin-bottom:14px;}
+
+.sbox{border-radius:var(--rs);padding:11px 14px;font-size:12.5px;margin-bottom:14px;line-height:1.6;}
+.sbox-info{background:var(--gold-light);border:1.5px solid #fcd34d;color:#92400e;}
+.sbox-ok{background:var(--green-light);border:1.5px solid #86efac;color:#166534;}
+.sbox-err{background:var(--red-light);border:1.5px solid #fca5a5;color:#991b1b;}
+
+/* UPLOAD CARDS */
+.upload-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:18px;}
+.uc{background:var(--g0);border:2px dashed var(--g3);border-radius:var(--r);padding:22px 16px;cursor:pointer;transition:all .15s;position:relative;text-align:center;}
+.uc:hover{border-color:var(--red);background:var(--red-light);}
+.uc.done{border-color:var(--green);border-style:solid;background:var(--green-light);}
+.uc input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.uc .uc-ic{font-size:28px;margin-bottom:8px;}
+.uc .uc-title{font-weight:700;font-size:13px;color:var(--g7);margin-bottom:4px;}
+.uc.done .uc-title{color:var(--green);}
+.uc .uc-sub{font-size:11px;color:var(--g4);line-height:1.5;}
+.uc .uc-opt{display:inline-block;background:var(--amber-light);color:var(--amber);border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;margin-top:4px;}
+.uc.done .uc-opt{display:none;}
+
+/* DATA STATUS */
+.status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+.stat-box{background:var(--g0);border:1.5px solid var(--g2);border-radius:var(--rs);padding:14px;}
+.stat-box .sb-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g4);margin-bottom:4px;}
+.stat-box .sb-val{font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;color:var(--g9);}
+.stat-box .sb-sub{font-size:11px;color:var(--g5);margin-top:2px;}
+.stat-box.ok .sb-val{color:var(--green);}
+.stat-box.warn .sb-val{color:var(--amber);}
+
+/* DAY 0 TABLE */
+.at{width:100%;border-collapse:collapse;font-size:12.5px;}
+.at th{text-align:left;padding:9px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g4);border-bottom:1.5px solid var(--g2);background:var(--g0);white-space:nowrap;}
+.at td{padding:9px 12px;border-bottom:1px solid var(--g1);vertical-align:middle;}
+.at tr.changed td{background:#fffbeb;}
+.at tr:last-child td{border-bottom:none;}
+.at tr:hover td{background:var(--cream);}
+.at tr.changed:hover td{background:#fff8e1;}
+.at input[type=date]{border:1.5px solid var(--g2);border-radius:6px;padding:5px 9px;font-size:12px;font-family:'Nunito Sans',sans-serif;color:var(--g7);min-width:150px;}
+.at input[type=date]:focus{outline:none;border-color:var(--red);}
+.mod-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gold-dark);margin-left:5px;vertical-align:middle;}
+
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;font-family:'Nunito',sans-serif;}
+.b-mod{background:var(--amber-light);color:var(--amber);}
+.b-ok{background:var(--green-light);color:var(--green);}
+.b-re{background:var(--red-light);color:var(--red);}
+
+.a-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--g2);}
+input[type=text].srch{border:1.5px solid var(--g2);border-radius:var(--rs);padding:6px 10px;font-size:12.5px;font-family:'Nunito Sans',sans-serif;color:var(--g7);min-width:200px;}
+input[type=text].srch:focus{outline:none;border-color:var(--red);}
+
+/* PREVIEW TABLE */
+.preview-wrap{overflow-x:auto;border-radius:var(--rs);border:1.5px solid var(--g2);margin-top:14px;}
+.pt{width:100%;border-collapse:collapse;font-size:12px;}
+.pt thead th{background:var(--red);color:#fff;padding:7px 11px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.pt tbody td{padding:7px 11px;border-bottom:1px solid var(--g1);vertical-align:middle;}
+.pt tbody tr:last-child td{border-bottom:none;}
+.pt tbody tr:hover td{background:var(--g0);}
+
+/* GUIDE */
+.step-list{padding-left:18px;font-size:13px;color:var(--g7);line-height:2.2;}
+.step-list li strong{color:var(--g9);}
+code{background:var(--g1);border-radius:4px;padding:1px 5px;font-size:12px;color:var(--red-dark);}
+.logic-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;}
+.logic-table th{background:var(--red);color:#fff;padding:9px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.logic-table td{padding:9px 14px;border-bottom:1px solid var(--g1);}
+.logic-table tr:last-child td{border-bottom:none;}
+.logic-table tr:nth-child(even) td{background:var(--g0);}
+.info-box{background:var(--gold-light);border:1.5px solid #fcd34d;border-radius:var(--rs);padding:12px 14px;font-size:12.5px;color:#92400e;margin-top:14px;line-height:1.7;}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--green);color:#fff;padding:11px 18px;border-radius:var(--rs);font-weight:700;font-size:13px;font-family:'Nunito',sans-serif;box-shadow:var(--sh2);z-index:999;opacity:0;transform:translateY(16px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.empty-msg{text-align:center;padding:28px;color:var(--g4);font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="sb">
+  <div class="sb-logo">
+    <div class="star">⭐</div>
+    <div class="name">Hamleys</div>
+    <div class="sub">Admin Config</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="ni on" id="nav-upload" onclick="showSec('upload')"><span class="ic">📂</span>Upload Files</div>
+    <div class="ni" id="nav-day0" onclick="showSec('day0')"><span class="ic">📅</span>Set Day 0</div>
+    <div class="ni" id="nav-guide" onclick="showSec('guide')"><span class="ic">📋</span>Reference Guide</div>
+  </nav>
+  <div class="sb-foot">
+    <a href="index.html" class="back-link">← Back to Dashboard</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="tb">
+    <div>
+      <div class="tb-title">⚙️ Admin Configuration</div>
+      <div class="tb-sub" id="tb-sub">Manage data uploads and Day 0 settings</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost" onclick="resetD0()">↺ Reset Day 0</button>
+      <button class="btn btn-red" onclick="saveD0()">💾 Save Day 0</button>
+    </div>
+  </div>
+
+  <!-- ═══ UPLOAD SECTION ═══════════════════════════════════ -->
+  <div class="pg on" id="pg-upload">
+    <div class="wrap">
+
+      <!-- Data Status -->
+      <div class="status-grid" id="status-grid">
+        <div class="stat-box" id="sb-joinees">
+          <div class="sb-lbl">Joinees Sheet</div>
+          <div class="sb-val">—</div>
+          <div class="sb-sub">Not loaded</div>
+        </div>
+        <div class="stat-box" id="sb-responses">
+          <div class="sb-lbl">Responses Sheet</div>
+          <div class="sb-val">—</div>
+          <div class="sb-sub">Not loaded</div>
+        </div>
+        <div class="stat-box" id="sb-store">
+          <div class="sb-lbl">Store Mapping</div>
+          <div class="sb-val">—</div>
+          <div class="sb-sub">Not loaded</div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h3>📂 Upload Data Files</h3>
+        <p>Upload the three Excel files below. Once all files are uploaded, the dashboard calculates compliance automatically from the actual responses — no manual data entry needed. Re-upload any file anytime to refresh that data.</p>
+
+        <div class="upload-grid">
+          <!-- Joinees -->
+          <label class="uc" id="uc-joinees">
+            <input type="file" accept=".xlsx,.xls" onchange="loadJoinees(event)">
+            <div class="uc-ic">👥</div>
+            <div class="uc-title" id="joinees-lbl">Upload Joinees Sheet</div>
+            <div class="uc-sub"><strong>CertifiedToPlay_Reports.xlsx</strong><br>FC master list with Day 0 in col L</div>
+          </label>
+          <!-- Responses -->
+          <label class="uc" id="uc-responses">
+            <input type="file" accept=".xlsx,.xls" onchange="loadResponses(event)">
+            <div class="uc-ic">📋</div>
+            <div class="uc-title" id="responses-lbl">Upload Responses Sheet</div>
+            <div class="uc-sub"><strong>Certified_To_Play.xlsx</strong><br>MS Forms responses (Zone + Outcome)</div>
+          </label>
+          <!-- Base Store -->
+          <label class="uc" id="uc-store">
+            <input type="file" accept=".xlsx,.xls" onchange="loadStoreData(event)">
+            <div class="uc-ic">🏪</div>
+            <div class="uc-title" id="store-lbl">Upload Base Store Data</div>
+            <div class="uc-sub"><strong>Base_Store_Data.xlsx</strong><br>Store → ROM + SD mapping</div>
+            <div class="uc-opt">Optional</div>
+          </label>
+        </div>
+
+        <div class="sbox sbox-info" id="upload-note">Upload both the Joinees sheet and Responses sheet to enable the dashboard. Base Store Data is optional — it improves store/ROM mapping.</div>
+      </div>
+
+      <!-- Previews -->
+      <div class="sec" id="prev-joinees" style="display:none">
+        <h3>👥 Joinees Preview</h3>
+        <p id="prev-joinees-desc"></p>
+        <div class="preview-wrap">
+          <table class="pt">
+            <thead><tr><th>#</th><th>Name</th><th>Emp Code</th><th>Store</th><th>SD</th><th>ROM</th><th>DOJ</th><th>Day 0</th></tr></thead>
+            <tbody id="prev-joinees-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="sec" id="prev-responses" style="display:none">
+        <h3>📋 Responses Preview</h3>
+        <p id="prev-responses-desc"></p>
+        <div class="preview-wrap">
+          <table class="pt">
+            <thead><tr><th>FC Name</th><th>Emp Code</th><th>Store</th><th>Zone</th><th>Outcome</th><th>Cert Date</th><th>Assessor</th></tr></thead>
+            <tbody id="prev-responses-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ DAY 0 SECTION ════════════════════════════════════ -->
+  <div class="pg" id="pg-day0">
+    <div class="wrap-lg">
+      <div class="sec">
+        <div class="sec-hdr">
+          <h3>📅 Set Day 0 Per FC</h3>
+          <input type="text" class="srch" id="d0-srch" placeholder="Search by name or store…" oninput="filterD0()">
+        </div>
+        <p>Day 0 is the official start of the FC's 6-week Certified to Play journey. Always set it to a <strong>Friday</strong> — this ensures all 6 assessment dates fall on Fridays. W1 Assessment = Day 0 + 7 days, W2 = +14, and so on. <span style="background:var(--gold-light);color:var(--gold-dark);padding:1px 6px;border-radius:4px;font-weight:700;">Yellow rows</span> = manually overridden from the Excel original.</p>
+        <div style="overflow-x:auto">
+          <table class="at">
+            <thead><tr>
+              <th>#</th><th>FC Name</th><th>Store · SD</th><th>ROM</th><th>DOJ</th>
+              <th>Day 0</th><th>W1 (Day 7)</th><th>W2 (Day 15)</th><th>W3 (Day 22)</th><th>Changed?</th>
+            </tr></thead>
+            <tbody id="d0-tbody"></tbody>
+          </table>
+        </div>
+        <div class="a-acts">
+          <button class="btn btn-ghost" onclick="resetD0()">↺ Reset All to Original</button>
+          <button class="btn btn-red" onclick="saveD0()">💾 Save Day 0 Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ GUIDE SECTION ═════════════════════════════════════ -->
+  <div class="pg" id="pg-guide">
+    <div class="wrap">
+
+      <div class="sec">
+        <h3>📥 How to Export Files from SharePoint</h3>
+        <p>Follow these steps each time you want to refresh the dashboard with the latest data:</p>
+        <ol class="step-list">
+          <li>Open SharePoint → navigate to <strong>CertifiedToPlay_Reports.xlsx</strong> (the joinees sheet) → <strong>Download</strong></li>
+          <li>Open SharePoint → navigate to <strong>Certified_To_Play.xlsx</strong> (MS Forms responses) → <strong>Download</strong></li>
+          <li>Open this Admin page → <strong>Upload Files</strong> tab</li>
+          <li>Upload both downloaded files in the upload cards above</li>
+          <li>Dashboard rebuilds automatically — all compliance numbers refresh instantly</li>
+        </ol>
+        <div class="info-box">💡 You only need to re-upload when data changes. The dashboard remembers your last upload and uses it each time the page loads.</div>
+      </div>
+
+      <div class="sec">
+        <h3>📊 How Compliance Is Calculated</h3>
+        <p>The dashboard reads <strong>raw responses</strong> from the MS Forms file and computes compliance per FC from scratch. It does NOT use any pre-calculated columns from the Excel file.</p>
+
+        <p style="margin-top:10px;font-weight:600;color:var(--g7);">Step 1 — Determine Ideal Certifications (Denominator)</p>
+        <table class="logic-table">
+          <thead><tr><th>Days Since Day 0</th><th>Zone</th><th>Ideal Certs Due</th></tr></thead>
+          <tbody>
+            <tr><td>7 or more days</td><td>W1 — Demo</td><td>1</td></tr>
+            <tr><td>15 or more days</td><td>W2 — CSD</td><td>2</td></tr>
+            <tr><td>22 or more days</td><td>W3 — Product</td><td>3</td></tr>
+            <tr><td>29 or more days</td><td>W4 — Selling</td><td>4</td></tr>
+            <tr><td>36 or more days</td><td>W5 — VM</td><td>5</td></tr>
+            <tr><td>43 or more days</td><td>W6 — Billing</td><td>6 (Fully Certified)</td></tr>
+          </tbody>
+        </table>
+
+        <p style="margin-top:14px;font-weight:600;color:var(--g7);">Step 2 — Count Actual Certifications (Numerator)</p>
+        <p style="margin-top:6px;">For each FC, for each zone: scan all response rows matching that FC's Emp Code. If <strong>any</strong> row for that zone has Outcome = <strong>"Pass"</strong>, the zone counts as certified (= 1). Multiple "Pass" entries for the same zone still count as 1. A zone with only "Reassessment" entries counts as 0.</p>
+
+        <div class="info-box">
+          <strong>Compliance % = Actual Certs ÷ Ideal Certs × 100</strong><br>
+          FC with 0 ideal certs → "Not yet due" (hasn't reached 7-day threshold)<br>
+          FC with 6/6 actual certs → Fully Certified 🏆<br>
+          Zones: Demo · CSD · Product · Selling · VM · Billing
+        </div>
+      </div>
+
+      <div class="sec">
+        <h3>📅 Day 0 Rules</h3>
+        <ol class="step-list">
+          <li>Day 0 = official start of the FC's journey. Always set to a <strong>Friday</strong></li>
+          <li>FCs may join any day of the week — Day 0 standardises their assessment schedule</li>
+          <li>W1 Assessment = Day 0 + 7 days (next Friday if not already Friday)</li>
+          <li>Each subsequent assessment = previous + 7 days</li>
+          <li>FC joining Monday → Day 0 set to coming Friday → W1 assessment = Friday of week 2</li>
+          <li>Day 0 is set in col L of the Joinees sheet, but can be overridden here without changing the Excel</li>
+        </ol>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// STATE — shared with index.html via localStorage
+// ═══════════════════════════════════════════════════
+let JOINEES   = [];
+let RESPONSES = [];
+let STORE_MAP = {};
+let D0        = {};
+
+try{const d=localStorage.getItem('ctp_joinees');if(d)JOINEES=JSON.parse(d);}catch(e){}
+try{const d=localStorage.getItem('ctp_responses');if(d)RESPONSES=JSON.parse(d);}catch(e){}
+try{const d=localStorage.getItem('ctp_store_map');if(d)STORE_MAP=JSON.parse(d);}catch(e){}
+try{D0=JSON.parse(localStorage.getItem('ctp_d0')||'{}');}catch(e){}
+
+// ═══════════════════════════════════════════════════
+// DATE HELPERS
+// ═══════════════════════════════════════════════════
+function excelSerial(n){const d=new Date(Date.UTC(1899,11,30));d.setUTCDate(d.getUTCDate()+Math.round(n));return d.toISOString().slice(0,10);}
+function parseAnyDate(v){
+  if(v===''||v===null||v===undefined)return'';
+  if(typeof v==='number'&&v>40000)return excelSerial(v);
+  const s=String(v).trim();if(!s)return'';
+  const p=s.split(/[\/\-\.]/);
+  if(p.length===3){
+    if(p[2].length===4)return`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+    if(p[0].length===4)return s.includes('-')?s:`${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;
+  }
+  const d=new Date(s);return isNaN(d)?'':d.toISOString().slice(0,10);
+}
+function addDays(s,n){const d=new Date(s);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function nextFriday(s){const d=new Date(s),dow=d.getDay(),diff=(5-dow+7)%7;if(!diff)return s;d.setDate(d.getDate()+diff);return d.toISOString().slice(0,10);}
+function assessDates(day0){
+  if(!day0)return Array(6).fill(null);
+  const out=[nextFriday(addDays(day0,7))];
+  for(let i=1;i<6;i++) out.push(nextFriday(addDays(out[i-1],7)));
+  return out;
+}
+function fmtDate(s){if(!s)return'—';return new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+
+// ═══════════════════════════════════════════════════
+// EXCEL READER
+// ═══════════════════════════════════════════════════
+function readExcel(file,cb){
+  const r=new FileReader();
+  r.onload=e=>{try{cb(XLSX.read(e.target.result,{type:'array',cellDates:false}),null);}catch(err){cb(null,err);}};
+  r.readAsArrayBuffer(file);
+}
+function sheetRows(wb,name){
+  const n=name?wb.SheetNames.find(s=>s===name)||wb.SheetNames[0]:wb.SheetNames[0];
+  return XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:''});
+}
+function hdrRow(rows,must){
+  for(let i=0;i<Math.min(rows.length,10);i++){
+    const r=rows[i].map(c=>String(c).trim().toLowerCase());
+    if(must.every(k=>r.some(h=>h.includes(k))))return i;
+  }
+  return 0;
+}
+function ci(hdrs,aliases){for(const a of aliases){const i=hdrs.findIndex(h=>h.includes(a));if(i>=0)return i;}return-1;}
+
+// ═══════════════════════════════════════════════════
+// LOAD JOINEES
+// ═══════════════════════════════════════════════════
+function loadJoinees(event){
+  const file=event.target.files[0];if(!file)return;
+  readExcel(file,(wb,err)=>{
+    if(err){showErr('joinees','Error reading file');return;}
+    const rows=sheetRows(wb,'Sheet1');
+    const hi=hdrRow(rows,['name','emp']);
+    const hdrs=rows[hi].map(h=>String(h).trim().toLowerCase());
+
+    const iN=ci(hdrs,['name']),iE=ci(hdrs,['emp code','emp']),iDg=ci(hdrs,['desgn','desig']);
+    const iSt=ci(hdrs,['store']),iRg=ci(hdrs,['region']),iCd=ci(hdrs,['store code','storecode']);
+    const iSD=ci(hdrs,['sd']),iRM=ci(hdrs,['rom']),iDJ=ci(hdrs,['doj']),iD0=ci(hdrs,['day 0','day0']);
+
+    const parsed=rows.slice(hi+1).map((row,i)=>{
+      const name=String(row[iN]||'').trim();
+      if(!name||/^(sr|#|grand|total|name)/i.test(name))return null;
+      return{sr:i+1,name,emp:String(row[iE]||'').trim(),desig:String(row[iDg]||'Fun Consultant').trim(),
+        store:String(row[iSt]||'').trim(),region:String(row[iRg]||'').trim(),code:String(row[iCd]||'').trim(),
+        sd:String(row[iSD]||'').trim(),rom:String(row[iRM]||'').trim(),
+        doj_date:parseAnyDate(row[iDJ]),day0_date:parseAnyDate(row[iD0])};
+    }).filter(r=>r&&(r.emp||r.name));
+
+    if(!parsed.length){showErr('joinees','No FC rows found — check file');return;}
+    JOINEES=parsed;
+    const ts=new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    try{localStorage.setItem('ctp_joinees',JSON.stringify(parsed));localStorage.setItem('ctp_joinees_src',file.name);localStorage.setItem('ctp_joinees_ts',ts);}catch(e){}
+
+    setStatBox('sb-joinees',parsed.length,'ok',`${parsed.length} FCs`,file.name);
+    document.getElementById('uc-joinees').classList.add('done');
+    document.getElementById('joinees-lbl').textContent=`✅ ${parsed.length} FCs loaded`;
+
+    // Show preview
+    document.getElementById('prev-joinees').style.display='block';
+    document.getElementById('prev-joinees-desc').textContent=`Showing first 8 rows of ${parsed.length} FCs from "${file.name}"`;
+    document.getElementById('prev-joinees-tbody').innerHTML=parsed.slice(0,8).map(fc=>`
+      <tr>
+        <td style="color:var(--g4);font-size:11px">${fc.sr}</td>
+        <td style="font-weight:600">${fc.name}</td>
+        <td style="font-size:11.5px">${fc.emp}</td>
+        <td style="font-size:11.5px">${fc.store}</td>
+        <td style="font-size:11.5px">${fc.sd}</td>
+        <td style="font-size:11.5px">${fc.rom}</td>
+        <td style="font-size:11px;color:var(--g5)">${fmtDate(fc.doj_date)}</td>
+        <td style="font-weight:700;color:var(--red);font-size:11.5px">${fmtDate(fc.day0_date)}</td>
+      </tr>`).join('');
+
+    updateUploadNote();
+    renderD0Table();
+    toast(`✅ ${parsed.length} FCs loaded from joinees sheet`);
+  });
+  event.target.value='';
+}
+
+// ═══════════════════════════════════════════════════
+// LOAD RESPONSES
+// ═══════════════════════════════════════════════════
+function loadResponses(event){
+  const file=event.target.files[0];if(!file)return;
+  readExcel(file,(wb,err)=>{
+    if(err){showErr('responses','Error reading file');return;}
+    const rows=sheetRows(wb,'Sheet1');
+    const hi=hdrRow(rows,['fc name','zone','outcome']);
+    const hdrs=rows[hi].map(h=>String(h).trim().toLowerCase());
+
+    const iFN=ci(hdrs,['fc name']),iFE=ci(hdrs,['fc employee','fc emp']);
+    const iFD=ci(hdrs,['fc doj']),iSt=ci(hdrs,['store name','store']);
+    const iCd=ci(hdrs,['store code']),iAs=ci(hdrs,['assessors','assessor']);
+    const iZn=ci(hdrs,['zone']),iOc=ci(hdrs,['outcome']),iDt=ci(hdrs,['certification date']);
+
+    const parsed=rows.slice(hi+1).map(row=>{
+      const fcName=String(row[iFN]||'').trim();
+      const zone  =String(row[iZn]||'').trim();
+      const outcome=String(row[iOc]||'').trim();
+      if(!fcName||!zone||!outcome)return null;
+      return{
+        fcName,
+        fcEmp:String(row[iFE]||'').trim(),
+        fcDoj:parseAnyDate(row[iFD]),
+        store:String(row[iSt]||'').trim(),
+        code:String(row[iCd]||'').trim(),
+        assessor:String(row[iAs]||'').trim(),
+        zone:normalizeZone(zone),
+        outcome:outcome.toLowerCase().includes('pass')?'Pass':'Reassessment',
+        certDate:parseAnyDate(row[iDt]),
+      };
+    }).filter(Boolean);
+
+    if(!parsed.length){showErr('responses','No response rows found — check file');return;}
+    RESPONSES=parsed;
+    const ts=new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    try{localStorage.setItem('ctp_responses',JSON.stringify(parsed));localStorage.setItem('ctp_responses_src',file.name);localStorage.setItem('ctp_responses_ts',ts);}catch(e){}
+
+    // Count unique zones passed
+    const passes=parsed.filter(r=>r.outcome==='Pass').length;
+    const reassess=parsed.filter(r=>r.outcome==='Reassessment').length;
+    setStatBox('sb-responses',parsed.length,'ok',`${parsed.length} rows`,`${passes} Pass · ${reassess} Reassess`);
+    document.getElementById('uc-responses').classList.add('done');
+    document.getElementById('responses-lbl').textContent=`✅ ${parsed.length} responses loaded`;
+
+    // Show preview
+    document.getElementById('prev-responses').style.display='block';
+    document.getElementById('prev-responses-desc').textContent=`Showing first 10 rows of ${parsed.length} responses from "${file.name}"`;
+    document.getElementById('prev-responses-tbody').innerHTML=parsed.slice(0,10).map(r=>`
+      <tr>
+        <td style="font-weight:600">${r.fcName}</td>
+        <td style="font-size:11.5px">${r.fcEmp}</td>
+        <td style="font-size:11.5px">${r.store}</td>
+        <td><span style="font-weight:700">${r.zone}</span></td>
+        <td><span style="font-weight:700;color:${r.outcome==='Pass'?'var(--green)':'var(--red)'}">${r.outcome}</span></td>
+        <td style="font-size:11px;color:var(--g5)">${fmtDate(r.certDate)}</td>
+        <td style="font-size:11px;color:var(--g5)">${r.assessor}</td>
+      </tr>`).join('');
+
+    updateUploadNote();
+    toast(`✅ ${parsed.length} responses loaded`);
+  });
+  event.target.value='';
+}
+
+// ═══════════════════════════════════════════════════
+// LOAD STORE DATA
+// ═══════════════════════════════════════════════════
+function loadStoreData(event){
+  const file=event.target.files[0];if(!file)return;
+  readExcel(file,(wb,err)=>{
+    if(err){showErr('store','Error reading file');return;}
+    const rows=sheetRows(wb,'Sheet1');
+    const hi=hdrRow(rows,['store code','rom']);
+    const hdrs=rows[hi].map(h=>String(h).trim().toLowerCase());
+
+    const iSN=ci(hdrs,['store name','storename']),iSC=ci(hdrs,['store code','storecode']);
+    const iRM=ci(hdrs,['rom name','rom']),iSD=ci(hdrs,['sd name','sd']);
+
+    const map={};
+    rows.slice(hi+1).forEach(row=>{
+      const code=String(row[iSC]||'').trim();
+      if(!code)return;
+      map[code]={
+        storeName:String(row[iSN]||'').trim(),
+        rom:String(row[iRM]||'').trim(),
+        sd:String(row[iSD]||'').trim(),
+      };
+    });
+
+    const count=Object.keys(map).length;
+    if(!count){showErr('store','No store rows found');return;}
+    STORE_MAP=map;
+    try{localStorage.setItem('ctp_store_map',JSON.stringify(map));localStorage.setItem('ctp_store_src',file.name);}catch(e){}
+
+    setStatBox('sb-store',count,'ok',`${count} stores`,file.name);
+    document.getElementById('uc-store').classList.add('done');
+    document.getElementById('store-lbl').textContent=`✅ ${count} stores loaded`;
+    updateUploadNote();
+    toast(`✅ ${count} stores loaded from base store data`);
+  });
+  event.target.value='';
+}
+
+function normalizeZone(z){
+  const l=z.toLowerCase().trim();
+  if(l.includes('demo'))return'Demo';
+  if(l.includes('csd')) return'CSD';
+  if(l.includes('product'))return'Product';
+  if(l.includes('sell'))return'Selling';
+  if(l==='vm'||l.includes('visual')||l.includes('merch'))return'VM';
+  if(l.includes('bill'))return'Billing';
+  return z;
+}
+
+function setStatBox(id,num,cls,val,sub){
+  const el=document.getElementById(id);if(!el)return;
+  el.className=`stat-box ${cls}`;
+  el.querySelector('.sb-val').textContent=typeof num==='number'?num.toLocaleString():num;
+  el.querySelector('.sb-sub').textContent=sub||'';
+}
+function showErr(type,msg){
+  toast(`❌ ${msg}`);
+}
+function updateUploadNote(){
+  const note=document.getElementById('upload-note');
+  const jOk=JOINEES.length>0,rOk=RESPONSES.length>0,sOk=Object.keys(STORE_MAP).length>0;
+  if(jOk&&rOk){
+    note.className='sbox sbox-ok';
+    note.innerHTML=`✅ Both required files loaded. <a href="index.html" style="color:var(--green);font-weight:700;">Open Dashboard →</a>${sOk?' · Store mapping also loaded.':' · Upload Base Store Data for improved store/ROM mapping.'}`;
+  } else {
+    note.className='sbox sbox-info';
+    note.innerHTML=`${jOk?'✅ Joinees loaded':'⏳ Joinees sheet needed'} · ${rOk?'✅ Responses loaded':'⏳ Responses sheet needed'} · ${sOk?'✅ Store data loaded':'Store data optional'}`;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// DAY 0 TABLE
+// ═══════════════════════════════════════════════════
+let d0Filter='';
+function filterD0(){d0Filter=document.getElementById('d0-srch').value.toLowerCase();renderD0Table();}
+
+function renderD0Table(){
+  const rows=JOINEES.filter(fc=>!d0Filter||fc.name?.toLowerCase().includes(d0Filter)||fc.store?.toLowerCase().includes(d0Filter));
+  document.getElementById('d0-tbody').innerHTML=!rows.length
+    ?`<tr><td colspan="10" class="empty-msg">${JOINEES.length?'No FCs match your search.':'No joinees data — upload CertifiedToPlay_Reports.xlsx on the Upload Files tab.'}</td></tr>`
+    :rows.map(fc=>{
+      const orig=fc.day0_date,cur=D0[fc.emp]||orig,changed=!!(D0[fc.emp]&&D0[fc.emp]!==orig);
+      const ad=assessDates(cur);
+      // Get zone status from responses for this FC
+      const fcResp=RESPONSES.filter(r=>(r.fcEmp&&r.fcEmp===fc.emp)||fuzzyName(r.fcName,fc.name));
+      const zones=['Demo','CSD','Product','Selling','VM','Billing'];
+      const zoneDots=zones.map(z=>{
+        const zr=fcResp.filter(r=>r.zone===z);
+        if(!zr.length)return`<span style="color:var(--g3);font-size:10px">·</span>`;
+        const pass=zr.some(r=>r.outcome==='Pass');
+        return`<span class="badge ${pass?'b-ok':'b-re'}" style="padding:1px 5px;font-size:9px">${z[0]}</span>`;
+      }).join(' ');
+
+      return`<tr class="${changed?'changed':''}">
+        <td style="color:var(--g4);font-size:11px">${fc.sr}</td>
+        <td><div style="font-weight:600">${fc.name}${changed?'<span class="mod-dot" title="Manually modified"></span>':''}</div><div style="font-size:10.5px;color:var(--g4)">${fc.emp}</div></td>
+        <td><div style="font-size:12px">${fc.store}</div><div style="font-size:10.5px;color:var(--g5)">SD: ${fc.sd}</div></td>
+        <td style="font-size:12px">${fc.rom}</td>
+        <td style="font-size:11.5px;color:var(--g5)">${fmtDate(fc.doj_date)}</td>
+        <td><input type="date" id="d0_${fc.emp}" value="${cur||''}" min="${fc.doj_date||''}" onchange="markD0('${fc.emp}',this.value)"></td>
+        <td style="font-size:11.5px;font-weight:700;color:var(--red)">${fmtDate(ad[0])}</td>
+        <td style="font-size:11.5px;color:var(--g5)">${fmtDate(ad[1])}</td>
+        <td style="font-size:11.5px;color:var(--g5)">${fmtDate(ad[2])}</td>
+        <td>${changed?'<span class="badge b-mod">Modified</span>':'<span style="color:var(--g3);font-size:11px">Original</span>'}</td>
+      </tr>`;
+  }).join('');
+}
+
+function fuzzyName(a,b){
+  if(!a||!b)return false;
+  const c=s=>s.toLowerCase().replace(/^(mr\.|ms\.|mrs\.)\s*/,'').trim();
+  const ca=c(a),cb=c(b);
+  return ca===cb||ca.includes(cb)||cb.includes(ca);
+}
+function markD0(emp,val){if(val)D0[emp]=val;else delete D0[emp];renderD0Table();}
+function saveD0(){
+  try{localStorage.setItem('ctp_d0',JSON.stringify(D0));}catch(e){}
+  toast('✅ Day 0 settings saved — dashboard will use these values.');
+}
+function resetD0(){
+  if(!confirm('Reset ALL Day 0 values to the original values from the joinees Excel?'))return;
+  D0={};try{localStorage.removeItem('ctp_d0');}catch(e){}
+  renderD0Table();toast('↺ All Day 0 values reset to original.');
+}
+
+// ═══════════════════════════════════════════════════
+// SECTION SWITCHING
+// ═══════════════════════════════════════════════════
+function showSec(name){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  document.getElementById('pg-'+name)?.classList.add('on');
+  document.getElementById('nav-'+name)?.classList.add('on');
+  if(name==='day0')renderD0Table();
+}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3800);}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  // Restore status from localStorage
+  if(JOINEES.length){
+    const src=localStorage.getItem('ctp_joinees_src')||'saved';
+    const ts=localStorage.getItem('ctp_joinees_ts')||'';
+    setStatBox('sb-joinees',JOINEES.length,'ok',`${JOINEES.length} FCs`,src+(ts?' · '+ts:''));
+    document.getElementById('uc-joinees').classList.add('done');
+    document.getElementById('joinees-lbl').textContent=`✅ ${JOINEES.length} FCs (saved)`;
+  }
+  if(RESPONSES.length){
+    const src=localStorage.getItem('ctp_responses_src')||'saved';
+    const ts=localStorage.getItem('ctp_responses_ts')||'';
+    const passes=RESPONSES.filter(r=>r.outcome==='Pass').length;
+    setStatBox('sb-responses',RESPONSES.length,'ok',`${RESPONSES.length} rows`,`${passes} Pass · ${RESPONSES.length-passes} Reassess`);
+    document.getElementById('uc-responses').classList.add('done');
+    document.getElementById('responses-lbl').textContent=`✅ ${RESPONSES.length} responses (saved)`;
+  }
+  const sCount=Object.keys(STORE_MAP).length;
+  if(sCount){
+    const src=localStorage.getItem('ctp_store_src')||'saved';
+    setStatBox('sb-store',sCount,'ok',`${sCount} stores`,src);
+    document.getElementById('uc-store').classList.add('done');
+    document.getElementById('store-lbl').textContent=`✅ ${sCount} stores (saved)`;
+  }
+  updateUploadNote();
+  document.getElementById('tb-sub').textContent=
+    JOINEES.length&&RESPONSES.length?`${JOINEES.length} FCs · ${RESPONSES.length} responses loaded`:'Upload files to populate the dashboard';
+});
+</script>
+</body>
+</html>
