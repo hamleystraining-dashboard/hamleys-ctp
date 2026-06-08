@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTP Admin — Hamleys L&D</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --red:#E8202A;--red-dark:#b51820;--red-light:#fde8e9;
+  --gold:#F5A623;--gold-dark:#c97d10;--gold-light:#fff8ec;
+  --green:#16a34a;--green-light:#dcfce7;
+  --amber:#d97706;--amber-light:#fef3c7;
+  --cream:#fdf8f2;
+  --g0:#f9fafb;--g1:#f3f4f6;--g2:#e5e7eb;--g3:#d1d5db;
+  --g4:#9ca3af;--g5:#6b7280;--g7:#374151;--g9:#111827;
+  --sh1:0 1px 4px rgba(0,0,0,.07);--sh2:0 4px 16px rgba(0,0,0,.09);
+  --r:12px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito Sans',sans-serif;background:var(--cream);color:var(--g9);min-height:100vh;}
+
+.sb{position:fixed;top:0;left:0;width:224px;height:100vh;background:var(--red);display:flex;flex-direction:column;z-index:60;box-shadow:3px 0 18px rgba(232,32,42,.22);}
+.sb-logo{padding:20px 16px 16px;text-align:center;border-bottom:1px solid rgba(255,255,255,.13);}
+.sb-logo .star{font-size:26px;}
+.sb-logo .name{font-family:'Nunito',sans-serif;font-weight:900;font-size:19px;color:#fff;margin-top:4px;}
+.sb-logo .sub{font-size:10px;font-weight:600;opacity:.7;letter-spacing:1.2px;text-transform:uppercase;margin-top:2px;color:#fff;}
+.sb-nav{flex:1;padding:14px 10px;}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:var(--rs);color:rgba(255,255,255,.8);font-size:13px;font-weight:600;cursor:pointer;transition:all .13s;margin-bottom:3px;font-family:'Nunito',sans-serif;}
+.ni:hover{background:rgba(255,255,255,.14);color:#fff;}
+.ni.on{background:#fff;color:var(--red);}
+.ni .ic{font-size:15px;width:18px;text-align:center;}
+.sb-note{padding:12px 14px;margin:8px;background:rgba(255,255,255,.1);border-radius:var(--rs);font-size:11px;color:rgba(255,255,255,.7);line-height:1.5;}
+
+.main{margin-left:224px;min-height:100vh;}
+.tb{background:#fff;border-bottom:1px solid var(--g2);height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:50;box-shadow:var(--sh1);}
+.tb-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:17px;}
+.tb-sub{font-size:11.5px;color:var(--g4);margin-top:2px;}
+
+.pg{display:none;padding:22px 26px;}.pg.on{display:block;}
+.wrap{max-width:920px;}
+
+.sec{background:#fff;border:1.5px solid var(--g2);border-radius:var(--r);padding:22px;margin-bottom:18px;box-shadow:var(--sh1);}
+.sec h3{font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;color:var(--g9);margin-bottom:6px;}
+.sec p{font-size:12.5px;color:var(--g5);line-height:1.7;margin-bottom:14px;}
+
+.sbox{border-radius:var(--rs);padding:11px 14px;font-size:12.5px;margin-bottom:14px;line-height:1.6;}
+.sbox-info{background:var(--gold-light);border:1.5px solid #fcd34d;color:#92400e;}
+.sbox-ok{background:var(--green-light);border:1.5px solid #86efac;color:#166534;}
+.sbox-err{background:var(--red-light);border:1.5px solid #fca5a5;color:#991b1b;}
+.sbox-blue{background:#eff6ff;border:1.5px solid #93c5fd;color:#1e40af;}
+
+/* Upload grid */
+.upload-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px;}
+.uc{background:var(--g0);border:2px dashed var(--g3);border-radius:var(--r);padding:22px 14px;cursor:pointer;transition:all .15s;position:relative;text-align:center;}
+.uc:hover{border-color:var(--red);background:var(--red-light);}
+.uc.done{border-color:var(--green);border-style:solid;background:var(--green-light);}
+.uc input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.uc .uc-ic{font-size:26px;margin-bottom:8px;}
+.uc .uc-title{font-weight:700;font-size:12.5px;color:var(--g7);margin-bottom:3px;}
+.uc.done .uc-title{color:var(--green);}
+.uc .uc-sub{font-size:10.5px;color:var(--g4);line-height:1.4;}
+.uc .uc-opt{display:inline-block;background:var(--amber-light);color:var(--amber);border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;margin-top:4px;}
+.uc.done .uc-opt{display:none;}
+
+/* Generate button - big and prominent */
+.gen-btn{width:100%;padding:16px;background:var(--red);color:#fff;border:none;border-radius:var(--r);font-size:16px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:6px;}
+.gen-btn:hover{background:var(--red-dark);transform:translateY(-1px);box-shadow:0 4px 16px rgba(232,32,42,.35);}
+.gen-btn:disabled{background:var(--g3);cursor:not-allowed;transform:none;box-shadow:none;}
+
+/* Download ready box */
+.dl-box{background:linear-gradient(135deg,var(--green-light),#bbf7d0);border:2px solid var(--green);border-radius:var(--r);padding:22px;text-align:center;margin-top:14px;display:none;}
+.dl-box .dl-icon{font-size:36px;margin-bottom:8px;}
+.dl-box h4{font-family:'Nunito',sans-serif;font-weight:900;font-size:18px;color:var(--green);margin-bottom:6px;}
+.dl-box p{font-size:12.5px;color:var(--g7);margin-bottom:16px;line-height:1.6;}
+.dl-btn{display:inline-flex;align-items:center;gap:8px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);padding:12px 24px;font-size:14px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;transition:all .15s;text-decoration:none;}
+.dl-btn:hover{background:#15803d;}
+.dl-steps{background:#fff;border-radius:var(--rs);padding:14px 16px;margin-top:14px;text-align:left;}
+.dl-steps h5{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g4);margin-bottom:8px;}
+.dl-steps ol{padding-left:18px;font-size:12.5px;color:var(--g7);line-height:2;}
+.dl-steps li strong{color:var(--g9);}
+
+/* Status stat boxes */
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.sb2{background:var(--g0);border:1.5px solid var(--g2);border-radius:var(--rs);padding:12px;}
+.sb2-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g4);margin-bottom:3px;}
+.sb2-val{font-family:'Nunito',sans-serif;font-weight:900;font-size:20px;color:var(--g9);}
+.sb2-sub{font-size:10.5px;color:var(--g5);margin-top:2px;}
+.sb2.ok .sb2-val{color:var(--green);}
+
+/* Day 0 table */
+.at{width:100%;border-collapse:collapse;font-size:12.5px;}
+.at th{text-align:left;padding:8px 11px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g4);border-bottom:1.5px solid var(--g2);background:var(--g0);white-space:nowrap;}
+.at td{padding:8px 11px;border-bottom:1px solid var(--g1);vertical-align:middle;}
+.at tr.changed td{background:#fffbeb;}
+.at tr:last-child td{border-bottom:none;}
+.at input[type=date]{border:1.5px solid var(--g2);border-radius:5px;padding:4px 8px;font-size:12px;font-family:'Nunito Sans',sans-serif;color:var(--g7);min-width:140px;}
+.at input[type=date]:focus{outline:none;border-color:var(--red);}
+.mod-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold-dark);margin-left:4px;vertical-align:middle;}
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;font-family:'Nunito',sans-serif;}
+.b-mod{background:var(--amber-light);color:var(--amber);}
+
+.a-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;padding-top:10px;border-top:1px solid var(--g2);}
+.btn{padding:7px 14px;border-radius:var(--rs);font-size:12.5px;font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;border:none;transition:all .13s;}
+.btn-red{background:var(--red);color:#fff;}.btn-red:hover{background:var(--red-dark);}
+.btn-ghost{background:#fff;color:var(--g7);border:1.5px solid var(--g2);}.btn-ghost:hover{border-color:var(--red);color:var(--red);}
+input[type=text].srch{border:1.5px solid var(--g2);border-radius:var(--rs);padding:6px 10px;font-size:12.5px;font-family:'Nunito Sans',sans-serif;color:var(--g7);min-width:190px;}
+input[type=text].srch:focus{outline:none;border-color:var(--red);}
+
+/* Guide */
+.step-list{padding-left:18px;font-size:13px;color:var(--g7);line-height:2.2;}
+code{background:var(--g1);border-radius:4px;padding:1px 5px;font-size:12px;color:var(--red-dark);}
+.logic-tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;}
+.logic-tbl th{background:var(--red);color:#fff;padding:8px 13px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;}
+.logic-tbl td{padding:8px 13px;border-bottom:1px solid var(--g1);}
+.logic-tbl tr:last-child td{border-bottom:none;}
+.logic-tbl tr:nth-child(even) td{background:var(--g0);}
+.info-box{background:var(--gold-light);border:1.5px solid #fcd34d;border-radius:var(--rs);padding:12px 14px;font-size:12.5px;color:#92400e;margin-top:12px;line-height:1.7;}
+
+/* preview */
+.prev-wrap{overflow-x:auto;border-radius:var(--rs);border:1.5px solid var(--g2);margin-top:12px;}
+.pt{width:100%;border-collapse:collapse;font-size:12px;}
+.pt thead th{background:var(--red);color:#fff;padding:7px 10px;font-size:10px;font-weight:700;text-transform:uppercase;white-space:nowrap;}
+.pt tbody td{padding:7px 10px;border-bottom:1px solid var(--g1);}
+.pt tbody tr:last-child td{border-bottom:none;}
+.pt tbody tr:hover td{background:var(--g0);}
+
+.toast{position:fixed;bottom:22px;right:22px;background:var(--green);color:#fff;padding:11px 18px;border-radius:var(--rs);font-weight:700;font-size:13px;font-family:'Nunito',sans-serif;box-shadow:var(--sh2);z-index:999;opacity:0;transform:translateY(16px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.empty-msg{text-align:center;padding:24px;color:var(--g4);font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="sb">
+  <div class="sb-logo">
+    <div class="star">⭐</div>
+    <div class="name">Hamleys</div>
+    <div class="sub">L&D Admin</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="ni on" id="nav-upload" onclick="showSec('upload')"><span class="ic">📂</span>Upload & Generate</div>
+    <div class="ni" id="nav-day0" onclick="showSec('day0')"><span class="ic">📅</span>Set Day 0</div>
+    <div class="ni" id="nav-guide" onclick="showSec('guide')"><span class="ic">📋</span>Reference Guide</div>
+  </nav>
+  <div class="sb-note">⚠️ This file is for L&D use only. Do NOT upload to GitHub.</div>
+</div>
+
+<div class="main">
+  <div class="tb">
+    <div>
+      <div class="tb-title">⚙️ CTP Admin — L&D Only</div>
+      <div class="tb-sub" id="tb-sub">Upload Excel files → Generate new index.html → Upload to GitHub</div>
+    </div>
+  </div>
+
+  <!-- ═══ UPLOAD & GENERATE ══════════════════════════ -->
+  <div class="pg on" id="pg-upload">
+    <div class="wrap">
+
+      <div class="sbox sbox-blue">
+        <strong>How this works:</strong> Upload both Excel files below. This tool reads them, bakes the data directly into a new <code>index.html</code>, which you download and upload to GitHub. Everyone who opens the dashboard then sees the latest data — no localStorage, no device issues, works for everyone.
+      </div>
+
+      <div class="sec">
+        <h3>📂 Step 1 — Upload Excel Files</h3>
+        <p>Upload both files. Base Store Data is optional but improves ROM/SD mapping.</p>
+
+        <div class="stat-row">
+          <div class="sb2" id="sb-j"><div class="sb2-lbl">Joinees Sheet</div><div class="sb2-val">—</div><div class="sb2-sub">Not loaded</div></div>
+          <div class="sb2" id="sb-r"><div class="sb2-lbl">Responses Sheet</div><div class="sb2-val">—</div><div class="sb2-sub">Not loaded</div></div>
+          <div class="sb2" id="sb-s"><div class="sb2-lbl">Store Mapping</div><div class="sb2-val">—</div><div class="sb2-sub">Optional</div></div>
+        </div>
+
+        <div class="upload-grid">
+          <label class="uc" id="uc-j">
+            <input type="file" accept=".xlsx,.xls" onchange="loadJoinees(event)">
+            <div class="uc-ic">👥</div>
+            <div class="uc-title" id="j-lbl">Joinees Sheet</div>
+            <div class="uc-sub"><strong>CertifiedToPlay_Reports.xlsx</strong><br>FC list with Day 0 in col L</div>
+          </label>
+          <label class="uc" id="uc-r">
+            <input type="file" accept=".xlsx,.xls" onchange="loadResponses(event)">
+            <div class="uc-ic">📋</div>
+            <div class="uc-title" id="r-lbl">Responses Sheet</div>
+            <div class="uc-sub"><strong>Certified_To_Play.xlsx</strong><br>MS Forms responses (Zone + Outcome)</div>
+          </label>
+          <label class="uc" id="uc-s">
+            <input type="file" accept=".xlsx,.xls" onchange="loadStoreData(event)">
+            <div class="uc-ic">🏪</div>
+            <div class="uc-title" id="s-lbl">Base Store Data</div>
+            <div class="uc-sub"><strong>Base_Store_Data.xlsx</strong><br>Store → ROM + SD mapping</div>
+            <div class="uc-opt">Optional</div>
+          </label>
+        </div>
+
+        <div class="sbox sbox-info" id="upload-note">Upload both required files to enable dashboard generation.</div>
+      </div>
+
+      <div class="sec">
+        <h3>⚡ Step 2 — Generate New Dashboard</h3>
+        <p>Click below to bake the uploaded data into a fresh <code>index.html</code>. This file replaces the one on GitHub and makes the dashboard visible to everyone with the latest data.</p>
+        <button class="gen-btn" id="gen-btn" onclick="generateDashboard()" disabled>
+          ⚡ Generate New index.html
+        </button>
+
+        <!-- Download ready -->
+        <div class="dl-box" id="dl-box">
+          <div class="dl-icon">✅</div>
+          <h4>index.html is ready to download!</h4>
+          <p>This file has your latest data baked in. Upload it to GitHub to update the live dashboard for everyone.</p>
+          <a id="dl-link" class="dl-btn" download="index.html">⬇ Download index.html</a>
+          <div class="dl-steps">
+            <h5>📋 Next steps — upload to GitHub</h5>
+            <ol>
+              <li>Go to <strong>github.com/hamleystraining-dashboard/hamleys-ctp</strong></li>
+              <li>Click <strong>index.html</strong> → click the <strong>pencil ✏️ icon</strong> (Edit)</li>
+              <li>Select all content → delete it → paste the new file content <em>OR</em></li>
+              <li>Use the <strong>three dots ···</strong> menu → <strong>Delete file</strong> → then <strong>Add file → Upload files</strong></li>
+              <li>Upload the downloaded <code>index.html</code> → click <strong>Commit changes</strong></li>
+              <li>Wait ~1 minute → everyone sees the updated dashboard 🎉</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <!-- Previews -->
+      <div class="sec" id="prev-j" style="display:none">
+        <h3>👥 Joinees Preview (first 8 rows)</h3>
+        <div class="prev-wrap"><table class="pt">
+          <thead><tr><th>#</th><th>Name</th><th>Emp</th><th>Store</th><th>SD</th><th>ROM</th><th>DOJ</th><th>Day 0</th></tr></thead>
+          <tbody id="prev-j-body"></tbody>
+        </table></div>
+      </div>
+
+      <div class="sec" id="prev-r" style="display:none">
+        <h3>📋 Responses Preview (first 10 rows)</h3>
+        <div class="prev-wrap"><table class="pt">
+          <thead><tr><th>FC Name</th><th>Emp Code</th><th>Zone</th><th>Outcome</th><th>Cert Date</th></tr></thead>
+          <tbody id="prev-r-body"></tbody>
+        </table></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ DAY 0 ════════════════════════════════════════ -->
+  <div class="pg" id="pg-day0">
+    <div class="wrap" style="max-width:1060px;">
+      <div class="sec">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <h3>📅 Set Day 0 Per FC</h3>
+          <input type="text" class="srch" id="d0-srch" placeholder="Search name or store…" oninput="filterD0()">
+        </div>
+        <p>Set Day 0 to a <strong>Friday</strong> so all assessment dates align. Changes here are included when you generate the new <code>index.html</code>. <span style="background:var(--gold-light);color:var(--gold-dark);padding:1px 6px;border-radius:4px;font-weight:700">Yellow</span> = manually modified.</p>
+        <div style="overflow-x:auto">
+          <table class="at">
+            <thead><tr><th>#</th><th>FC Name</th><th>Store · SD</th><th>ROM</th><th>DOJ</th><th>Day 0</th><th>W1 Assess</th><th>W2 Assess</th><th>W3 Assess</th><th>Changed?</th></tr></thead>
+            <tbody id="d0-tbody"></tbody>
+          </table>
+        </div>
+        <div class="a-acts">
+          <button class="btn btn-ghost" onclick="resetD0()">↺ Reset All</button>
+          <button class="btn btn-red" onclick="applyD0()">✓ Apply & Go to Generate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ GUIDE ════════════════════════════════════════ -->
+  <div class="pg" id="pg-guide">
+    <div class="wrap">
+      <div class="sec">
+        <h3>📥 Weekly Update Workflow</h3>
+        <ol class="step-list">
+          <li>Open SharePoint → download <strong>CertifiedToPlay_Reports.xlsx</strong> (joinees + Day 0)</li>
+          <li>Open SharePoint → download <strong>Certified_To_Play.xlsx</strong> (MS Forms responses)</li>
+          <li>Open this admin file locally in your browser</li>
+          <li>Upload both files in <strong>Upload & Generate</strong> tab</li>
+          <li>Adjust any Day 0 values in <strong>Set Day 0</strong> tab if needed</li>
+          <li>Click <strong>Generate New index.html</strong> → download the file</li>
+          <li>Upload <code>index.html</code> to GitHub → done! Everyone sees updated data</li>
+        </ol>
+        <div class="info-box">💡 <strong>This admin file never needs to go on GitHub.</strong> Keep it on your laptop. Only <code>index.html</code> goes to GitHub each week.</div>
+      </div>
+      <div class="sec">
+        <h3>📊 Compliance Logic</h3>
+        <table class="logic-tbl">
+          <thead><tr><th>Days Since Day 0</th><th>Zone</th><th>Ideal Certs Due</th></tr></thead>
+          <tbody>
+            <tr><td>7+</td><td>Demo</td><td>1</td></tr>
+            <tr><td>15+</td><td>CSD</td><td>2</td></tr>
+            <tr><td>22+</td><td>Product</td><td>3</td></tr>
+            <tr><td>29+</td><td>Selling</td><td>4</td></tr>
+            <tr><td>36+</td><td>VM</td><td>5</td></tr>
+            <tr><td>43+</td><td>Billing</td><td>6 ✅ Fully Certified</td></tr>
+          </tbody>
+        </table>
+        <div class="info-box">
+          <strong>Compliance % = Actual Zones Passed ÷ Ideal Certs Due × 100</strong><br>
+          Per FC per Zone: if ANY response row = "Pass" → that zone is certified (even if prior Reassessments exist)<br>
+          Multiple "Pass" for same FC + Zone = still counts as 1<br>
+          Matching by Emp Code (primary) → fuzzy name match (fallback)
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// THE KEY IDEA:
+// This admin file reads Excel files and generates a new index.html
+// with the data BAKED IN as JavaScript constants.
+// You download that index.html and upload it to GitHub.
+// Everyone sees the data — no localStorage, no device issues.
+// ═══════════════════════════════════════════════════
+
+let JOINEES   = [];
+let RESPONSES = [];
+let STORE_MAP = {};
+let D0        = {};  // manual day0 overrides
+
+// ─── DATE HELPERS ────────────────────────────────
+function excelSerial(n){const d=new Date(Date.UTC(1899,11,30));d.setUTCDate(d.getUTCDate()+Math.round(n));return d.toISOString().slice(0,10);}
+function parseAnyDate(v){
+  if(v===''||v===null||v===undefined)return'';
+  if(typeof v==='number'&&v>40000)return excelSerial(v);
+  const s=String(v).trim();if(!s)return'';
+  const p=s.split(/[\/\-\.]/);
+  if(p.length===3){
+    if(p[2].length===4)return`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+    if(p[0].length===4)return s.includes('-')?s:`${p[0]}-${p[1].padStart(2,'0')}-${p[2].padStart(2,'0')}`;
+  }
+  const d=new Date(s);return isNaN(d)?'':d.toISOString().slice(0,10);
+}
+function addDays(s,n){const d=new Date(s);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function nextFriday(s){const d=new Date(s),dow=d.getDay(),diff=(5-dow+7)%7;if(!diff)return s;d.setDate(d.getDate()+diff);return d.toISOString().slice(0,10);}
+function assessDates(day0){
+  if(!day0)return Array(6).fill(null);
+  const out=[nextFriday(addDays(day0,7))];
+  for(let i=1;i<6;i++)out.push(nextFriday(addDays(out[i-1],7)));
+  return out;
+}
+function fmtDate(s){if(!s)return'—';return new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+function normalizeZone(z){
+  const l=z.toLowerCase().trim();
+  if(l.includes('demo'))return'Demo';
+  if(l.includes('csd'))return'CSD';
+  if(l.includes('product'))return'Product';
+  if(l.includes('sell'))return'Selling';
+  if(l==='vm'||l.includes('visual')||l.includes('merch'))return'VM';
+  if(l.includes('bill'))return'Billing';
+  return z;
+}
+
+// ─── EXCEL READER ────────────────────────────────
+function readXL(file,cb){
+  const r=new FileReader();
+  r.onload=e=>{try{cb(XLSX.read(e.target.result,{type:'array',cellDates:false}),null);}catch(err){cb(null,err);}};
+  r.readAsArrayBuffer(file);
+}
+function xlRows(wb){
+  const n=wb.SheetNames.find(s=>s==='Sheet1')||wb.SheetNames[0];
+  return XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:''});
+}
+function hdrFind(rows,must){
+  for(let i=0;i<Math.min(rows.length,10);i++){
+    const r=rows[i].map(c=>String(c).trim().toLowerCase());
+    if(must.every(k=>r.some(h=>h.includes(k))))return i;
+  }
+  return 0;
+}
+function ci(hdrs,aliases){for(const a of aliases){const i=hdrs.findIndex(h=>h.includes(a));if(i>=0)return i;}return -1;}
+
+// ─── LOAD JOINEES ────────────────────────────────
+function loadJoinees(event){
+  const file=event.target.files[0];if(!file)return;
+  readXL(file,(wb,err)=>{
+    if(err){toast('❌ Error reading joinees file');return;}
+    const rows=xlRows(wb);
+    const hi=hdrFind(rows,['name','emp']);
+    const hdrs=rows[hi].map(h=>String(h).trim().toLowerCase());
+    const iN=ci(hdrs,['name']),iE=ci(hdrs,['emp code','emp']),iDg=ci(hdrs,['desgn','desig']);
+    const iSt=ci(hdrs,['store']),iRg=ci(hdrs,['region']),iCd=ci(hdrs,['store code','storecode']);
+    const iSD=ci(hdrs,['sd']),iRM=ci(hdrs,['rom']),iDJ=ci(hdrs,['doj']),iD0=ci(hdrs,['day 0','day0']);
+
+    const parsed=rows.slice(hi+1).map((row,i)=>{
+      const name=String(row[iN]||'').trim();
+      if(!name||/^(sr|#|grand|total|name)/i.test(name))return null;
+      return{sr:i+1,name,emp:String(row[iE]||'').trim(),desig:String(row[iDg]||'Fun Consultant').trim(),
+        store:String(row[iSt]||'').trim(),region:String(row[iRg]||'').trim(),code:String(row[iCd]||'').trim(),
+        sd:String(row[iSD]||'').trim(),rom:String(row[iRM]||'').trim(),
+        doj_date:parseAnyDate(row[iDJ]),day0_date:parseAnyDate(row[iD0])};
+    }).filter(r=>r&&(r.emp||r.name));
+
+    if(!parsed.length){toast('⚠️ No FC rows found');return;}
+    JOINEES=parsed;
+    setStat('sb-j',parsed.length,'ok',`${parsed.length} FCs`,file.name);
+    document.getElementById('uc-j').classList.add('done');
+    document.getElementById('j-lbl').textContent=`✅ ${parsed.length} FCs loaded`;
+
+    // Preview
+    document.getElementById('prev-j').style.display='block';
+    document.getElementById('prev-j-body').innerHTML=parsed.slice(0,8).map(fc=>`
+      <tr><td style="color:var(--g4);font-size:11px">${fc.sr}</td>
+      <td style="font-weight:600">${fc.name}</td><td>${fc.emp}</td>
+      <td>${fc.store}</td><td>${fc.sd}</td><td>${fc.rom}</td>
+      <td style="font-size:11px;color:var(--g5)">${fmtDate(fc.doj_date)}</td>
+      <td style="font-weight:700;color:var(--red)">${fmtDate(fc.day0_date)}</td></tr>`).join('');
+
+    updateNote();renderD0Table();
+    toast(`✅ ${parsed.length} FCs loaded`);
+  });event.target.value='';
+}
+
+// ─── LOAD RESPONSES ──────────────────────────────
+function loadResponses(event){
+  const file=event.target.files[0];if(!file)return;
+  readXL(file,(wb,err)=>{
+    if(err){toast('❌ Error reading responses file');return;}
+    const rows=xlRows(wb);
+    const hi=hdrFind(rows,['fc name','zone','outcome']);
+    const hdrs=rows[hi].map(h=>String(h).trim().toLowerCase());
+    const iFN=ci(hdrs,['fc name']),iFE=ci(hdrs,['fc employee','fc emp']);
+    const iZn=ci(hdrs,['zone']),iOc=ci(hdrs,['outcome']),iDt=ci(hdrs,['certification date']);
+
+    const parsed=rows.slice(hi+1).map(row=>{
+      const fcName=String(row[iFN]||'').trim();
+      const zone=String(row[iZn]||'').trim();
+      const outcome=String(row[iOc]||'').trim();
+      if(!fcName||!zone||!outcome)return null;
+      return{fcName,fcEmp:String(row[iFE]||'').trim(),zone:normalizeZone(zone),
+        outcome:outcome.toLowerCase().includes('pass')?'Pass':'Reassessment',
+        certDate:parseAnyDate(row[iDt])};
+    }).filter(Boolean);
+
+    if(!parsed.length){toast('⚠️ No response rows found');return;}
+    RESPONSES=parsed;
+    const passes=parsed.filter(r=>r.outcome==='Pass').length;
+    setStat('sb-r',parsed.length,'ok',`${parsed.length} rows`,`${passes} Pass · ${parsed.length-passes} Reassess`);
+    document.getElementById('uc-r').classList.add('done');
+    document.getElementById('r-lbl').textContent=`✅ ${parsed.length} responses`;
+
+    // Preview
+    document.getElementById('prev-r').style.display='block';
+    document.getElementById('prev-r-body').innerHTML=parsed.slice(0,10).map(r=>`
+      <tr><td style="font-weight:600">${r.fcName}</td><td>${r.fcEmp}</td>
+      <td><strong>${r.zone}</strong></td>
+      <td style="font-weight:700;color:${r.outcome==='Pass'?'var(--green)':'var(--red)'}">${r.outcome}</td>
+      <td style="font-size:11px;color:var(--g5)">${fmtDate(r.certDate)}</td></tr>`).join('');
+
+    updateNote();
+    toast(`✅ ${parsed.length} responses loaded`);
+  });event.target.value='';
+}
+
+// ─── LOAD STORE DATA ─────────────────────────────
+function loadStoreData(event){
+  const file=event.target.files[0];if(!file)return;
+  readXL(file,(wb,err)=>{
+    if(err){toast('❌ Error reading store file');return;}
+    const rows=xlRows(wb);
+    const hi=hdrFind(rows,['store code','rom']);
+    const hdrs=rows[hi].map(h=>String(h).trim().toLowerCase());
+    const iSN=ci(hdrs,['store name']),iSC=ci(hdrs,['store code','storecode']);
+    const iRM=ci(hdrs,['rom name','rom']),iSD=ci(hdrs,['sd name','sd']);
+    const map={};
+    rows.slice(hi+1).forEach(row=>{
+      const code=String(row[iSC]||'').trim();if(!code)return;
+      map[code]={storeName:String(row[iSN]||'').trim(),rom:String(row[iRM]||'').trim(),sd:String(row[iSD]||'').trim()};
+    });
+    const count=Object.keys(map).length;
+    if(!count){toast('⚠️ No stores found');return;}
+    STORE_MAP=map;
+    setStat('sb-s',count,'ok',`${count} stores`,file.name);
+    document.getElementById('uc-s').classList.add('done');
+    document.getElementById('s-lbl').textContent=`✅ ${count} stores`;
+    toast(`✅ ${count} stores loaded`);
+  });event.target.value='';
+}
+
+function setStat(id,num,cls,val,sub){
+  const el=document.getElementById(id);if(!el)return;
+  el.className=`sb2 ${cls}`;
+  el.querySelector('.sb2-val').textContent=typeof num==='number'?num:num;
+  el.querySelector('.sb2-sub').textContent=sub||'';
+}
+function updateNote(){
+  const jOk=JOINEES.length>0,rOk=RESPONSES.length>0;
+  const note=document.getElementById('upload-note');
+  const btn=document.getElementById('gen-btn');
+  if(jOk&&rOk){
+    note.className='sbox sbox-ok';
+    note.textContent='✅ Both files loaded — ready to generate! Click Step 2 below.';
+    btn.disabled=false;
+  } else {
+    note.className='sbox sbox-info';
+    note.textContent=`${jOk?'✅ Joinees loaded':'⏳ Joinees needed'} · ${rOk?'✅ Responses loaded':'⏳ Responses needed'}`;
+    btn.disabled=true;
+  }
+}
+
+// ─── DAY 0 TABLE ─────────────────────────────────
+let d0Filter='';
+function filterD0(){d0Filter=document.getElementById('d0-srch').value.toLowerCase();renderD0Table();}
+function renderD0Table(){
+  const rows=JOINEES.filter(fc=>!d0Filter||fc.name?.toLowerCase().includes(d0Filter)||fc.store?.toLowerCase().includes(d0Filter));
+  document.getElementById('d0-tbody').innerHTML=!rows.length
+    ?`<tr><td colspan="10" class="empty-msg">${JOINEES.length?'No match.':'Upload joinees file first.'}</td></tr>`
+    :rows.map(fc=>{
+      const orig=fc.day0_date,cur=D0[fc.emp]||orig,changed=!!(D0[fc.emp]&&D0[fc.emp]!==orig);
+      const ad=assessDates(cur);
+      return`<tr class="${changed?'changed':''}">
+        <td style="color:var(--g4);font-size:11px">${fc.sr}</td>
+        <td style="font-weight:600">${fc.name}${changed?'<span class="mod-dot"></span>':''}</td>
+        <td><div>${fc.store}</div><div style="font-size:10.5px;color:var(--g5)">SD: ${fc.sd}</div></td>
+        <td style="font-size:12px">${fc.rom}</td>
+        <td style="font-size:11px;color:var(--g5)">${fmtDate(fc.doj_date)}</td>
+        <td><input type="date" id="d0_${fc.emp}" value="${cur||''}" min="${fc.doj_date||''}" onchange="markD0('${fc.emp}',this.value)"></td>
+        <td style="font-size:11.5px;font-weight:700;color:var(--red)">${fmtDate(ad[0])}</td>
+        <td style="font-size:11.5px;color:var(--g5)">${fmtDate(ad[1])}</td>
+        <td style="font-size:11.5px;color:var(--g5)">${fmtDate(ad[2])}</td>
+        <td>${changed?'<span class="badge b-mod">Modified</span>':'<span style="color:var(--g3);font-size:11px">Original</span>'}</td>
+      </tr>`;
+  }).join('');
+}
+function markD0(emp,val){if(val)D0[emp]=val;else delete D0[emp];renderD0Table();}
+function resetD0(){if(!confirm('Reset all Day 0 to original?'))return;D0={};renderD0Table();toast('↺ Reset done.');}
+function applyD0(){showSec('upload');toast('✅ Day 0 settings applied — now click Generate.');}
+
+// ─── GENERATE index.html ─────────────────────────
+function generateDashboard(){
+  if(!JOINEES.length||!RESPONSES.length){toast('⚠️ Upload both files first');return;}
+
+  // Apply Day 0 overrides to joinees
+  const joineesWithD0 = JOINEES.map(fc=>({
+    ...fc,
+    day0_date: D0[fc.emp] || fc.day0_date
+  }));
+
+  const now = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  // Serialize data as compact JS
+  const jData = JSON.stringify(joineesWithD0);
+  const rData = JSON.stringify(RESPONSES);
+
+  // Fetch the template from the dashboard (index.html in same folder)
+  // Since we can't fetch local files, we embed the template as a string
+  // The template is stored in DASHBOARD_TEMPLATE below
+  const fullHTML = DASHBOARD_TEMPLATE
+    .replace('%%JOINEES_DATA%%', jData)
+    .replace('%%RESPONSES_DATA%%', rData)
+    .replace('%%GENERATED_AT%%', now)
+    .replace('%%FC_COUNT%%', joineesWithD0.length)
+    .replace('%%RESP_COUNT%%', RESPONSES.length);
+
+  // Create download link
+  const blob = new Blob([fullHTML], {type:'text/html'});
+  const url  = URL.createObjectURL(blob);
+  const link = document.getElementById('dl-link');
+  link.href = url;
+  link.download = 'index.html';
+
+  document.getElementById('dl-box').style.display='block';
+  document.getElementById('dl-box').scrollIntoView({behavior:'smooth'});
+  toast('✅ index.html generated — click Download!');
+}
+
+// ─── SECTION SWITCHING ───────────────────────────
+function showSec(name){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  document.getElementById('pg-'+name)?.classList.add('on');
+  document.getElementById('nav-'+name)?.classList.add('on');
+  if(name==='day0')renderD0Table();
+}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3800);}
+
+// ─── DASHBOARD TEMPLATE ─────────────────────────
+// This is the full index.html with placeholders for data injection
+// %%JOINEES_DATA%% and %%RESPONSES_DATA%% get replaced with real data
+const DASHBOARD_TEMPLATE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certified to Play — Hamleys</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#E8202A;--red-dark:#b51820;--red-light:#fde8e9;
+  --gold:#F5A623;--gold-dark:#c97d10;--gold-light:#fff8ec;
+  --green:#16a34a;--green-light:#dcfce7;
+  --amber:#d97706;--amber-light:#fef3c7;
+  --cream:#fdf8f2;--cream2:#fff9f2;
+  --g0:#f9fafb;--g1:#f3f4f6;--g2:#e5e7eb;--g3:#d1d5db;
+  --g4:#9ca3af;--g5:#6b7280;--g7:#374151;--g9:#111827;
+  --sh1:0 1px 4px rgba(0,0,0,.07);--sh2:0 4px 16px rgba(0,0,0,.09);
+  --r:12px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito Sans',sans-serif;background:var(--cream);color:var(--g9);min-height:100vh;}
+
+.sb{position:fixed;top:0;left:0;width:224px;height:100vh;background:var(--red);display:flex;flex-direction:column;z-index:60;box-shadow:3px 0 18px rgba(232,32,42,.22);}
+.sb-logo{padding:20px 16px 16px;text-align:center;border-bottom:1px solid rgba(255,255,255,.13);}
+.sb-logo .star{font-size:26px;}
+.sb-logo .name{font-family:'Nunito',sans-serif;font-weight:900;font-size:19px;color:#fff;margin-top:4px;}
+.sb-logo .sub{font-size:10px;font-weight:600;opacity:.7;letter-spacing:1.2px;text-transform:uppercase;margin-top:2px;color:#fff;}
+.sb-nav{flex:1;padding:14px 10px;}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:var(--rs);color:rgba(255,255,255,.8);font-size:13px;font-weight:600;cursor:pointer;transition:all .13s;margin-bottom:3px;font-family:'Nunito',sans-serif;}
+.ni:hover{background:rgba(255,255,255,.14);color:#fff;}
+.ni.on{background:#fff;color:var(--red);}
+.ni .ic{font-size:15px;width:18px;text-align:center;}
+/* sb-foot intentionally removed — no admin access from dashboard */
+
+.main{margin-left:224px;min-height:100vh;}
+.tb{background:#fff;border-bottom:1px solid var(--g2);height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;position:sticky;top:0;z-index:50;box-shadow:var(--sh1);}
+.tb-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:17px;}
+.src-pill{display:flex;align-items:center;gap:6px;border-radius:20px;padding:4px 12px;font-size:11.5px;font-weight:700;}
+.sp-none{background:var(--g1);color:var(--g5);}
+.sp-ok{background:var(--green-light);color:var(--green);}
+.sp-partial{background:var(--amber-light);color:var(--amber);}
+.src-dot{width:7px;height:7px;border-radius:50%;background:currentColor;animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.pg{display:none;padding:22px 26px;}
+.pg.on{display:block;}
+
+/* Upload cards removed — uploads handled in Admin page only */
+/* LANDING */
+.landing{max-width:560px;margin:60px auto;text-align:center;}
+.land-icon{font-size:52px;margin-bottom:14px;}
+.land-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;margin-bottom:10px;color:var(--g9);}
+.land-sub{font-size:13.5px;color:var(--g5);line-height:1.8;}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--cream2),#fff5e0);border:1.5px solid #f0d9a0;border-radius:14px;padding:20px 24px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;}
+.hero-left h2{font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;color:var(--red);margin-bottom:3px;}
+.hero-left p{font-size:13px;color:var(--g5);}
+.hero-badges{display:flex;gap:10px;}
+.hb{border-radius:10px;padding:12px 16px;text-align:center;color:#fff;font-family:'Nunito',sans-serif;}
+.hb-gold{background:linear-gradient(135deg,var(--gold),#c97d10);box-shadow:0 3px 12px rgba(245,166,35,.35);}
+.hb-red{background:linear-gradient(135deg,var(--red),var(--red-dark));box-shadow:0 3px 12px rgba(232,32,42,.28);}
+.hb-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;opacity:.88;}
+.hb-num{font-size:28px;font-weight:900;line-height:1.1;}
+.hb-sub{font-size:10px;font-weight:600;opacity:.82;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px;}
+.sc{background:#fff;border-radius:var(--r);padding:15px;border:1.5px solid var(--g2);box-shadow:var(--sh1);}
+.sc-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g4);margin-bottom:5px;}
+.sc-val{font-family:'Nunito',sans-serif;font-weight:900;font-size:26px;line-height:1;}
+.sc-sub{font-size:11px;color:var(--g5);margin-top:3px;}
+.sv-g{color:var(--green);}.sv-r{color:var(--red);}.sv-a{color:var(--amber);}.sv-gd{color:var(--gold-dark);}
+
+/* JOURNEY */
+.jbar{background:#fff;border:1.5px solid var(--g2);border-radius:var(--r);padding:16px 20px;margin-bottom:18px;box-shadow:var(--sh1);}
+.jbar-ttl{font-family:'Nunito',sans-serif;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--red);margin-bottom:13px;}
+.jsteps{display:flex;align-items:flex-start;}
+.jstep{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}
+.jstep:not(:last-child)::after{content:'';position:absolute;top:19px;left:calc(50% + 19px);width:calc(100% - 38px);height:2px;background:repeating-linear-gradient(90deg,var(--gold) 0,var(--gold) 5px,transparent 5px,transparent 11px);}
+.jc{width:38px;height:38px;border-radius:50%;border:2.5px solid;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;margin-bottom:6px;background:#fff;}
+.jp .jc{border-color:var(--green);background:var(--green-light);color:var(--green);}
+.jf .jc{border-color:var(--red);background:var(--red-light);color:var(--red);}
+.jd .jc{border-color:var(--amber);background:var(--amber-light);color:var(--amber);animation:glow .9s ease-in-out infinite alternate;}
+.jn .jc{border-color:var(--g3);color:var(--g4);}
+@keyframes glow{from{box-shadow:0 0 0 0 rgba(217,119,6,.3)}to{box-shadow:0 0 0 5px rgba(217,119,6,.1)}}
+.jlbl{font-size:10px;font-weight:700;color:var(--g7);font-family:'Nunito',sans-serif;text-align:center;}
+.jstat{font-size:9.5px;font-weight:700;margin-top:2px;text-align:center;}
+.jp .jstat{color:var(--green);}.jf .jstat{color:var(--red);}.jd .jstat{color:var(--amber);}.jn .jstat{color:var(--g4);}
+
+/* DATE FILTER */
+.dfbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--gold-light);border:1.5px solid #fcd34d;border-radius:var(--r);padding:10px 14px;margin-bottom:12px;}
+.dfbar label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gold-dark);}
+.presets{display:flex;gap:5px;flex-wrap:wrap;}
+.pb{padding:4px 11px;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;border:1.5px solid var(--g2);background:#fff;color:var(--g5);font-family:'Nunito',sans-serif;transition:all .13s;}
+.pb:hover,.pb.on{background:var(--red);color:#fff;border-color:var(--red);}
+input[type=date]{border:1.5px solid var(--g2);border-radius:var(--rs);padding:5px 9px;font-size:12px;font-family:'Nunito Sans',sans-serif;color:var(--g7);background:#fff;}
+input[type=date]:focus{outline:none;border-color:var(--red);}
+
+/* FILTER BAR */
+.fbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px;background:#fff;border:1.5px solid var(--g2);border-radius:var(--r);padding:10px 14px;margin-bottom:14px;box-shadow:var(--sh1);}
+.fg{display:flex;flex-direction:column;gap:3px;}
+.fg label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g4);}
+select,input[type=text]{border:1.5px solid var(--g2);border-radius:var(--rs);padding:6px 9px;font-size:12.5px;font-family:'Nunito Sans',sans-serif;color:var(--g7);background:#fff;}
+select:focus,input[type=text]:focus{outline:none;border-color:var(--red);}
+select{min-width:135px;}
+
+/* TABLE */
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.sh-title{font-family:'Nunito',sans-serif;font-size:17px;font-weight:900;}
+.tw{overflow-x:auto;border-radius:var(--r);border:1.5px solid var(--g2);background:#fff;box-shadow:var(--sh1);}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+thead th{background:var(--red);color:#fff;padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--g1);transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--cream2);}
+td{padding:10px 12px;vertical-align:middle;}
+.fc-name{font-weight:700;font-family:'Nunito',sans-serif;font-size:13px;}
+.fc-meta{font-size:11px;color:var(--g5);margin-top:2px;}
+.fc-emp{font-size:10.5px;color:var(--g4);}
+
+/* ZONE DOTS */
+.zdots{display:flex;gap:3px;justify-content:center;}
+.zd{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;position:relative;}
+.zd-p{background:var(--green);color:#fff;}
+.zd-f{background:var(--red);color:#fff;}
+.zd-d{background:var(--amber);color:#fff;animation:glow .9s ease-in-out infinite alternate;}
+.zd-n{background:var(--g1);color:var(--g4);border:1.5px dashed var(--g3);}
+[data-tip]{position:relative;}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100%+5px);left:50%;transform:translateX(-50%);background:var(--g9);color:#fff;padding:3px 8px;border-radius:5px;font-size:10.5px;white-space:nowrap;pointer-events:none;z-index:99;}
+
+/* NEXT CERT */
+.nc-z{font-weight:800;font-size:12px;font-family:'Nunito',sans-serif;}
+.nc-d{font-size:10.5px;color:var(--g5);margin-top:1px;}
+.col-od{color:var(--red);}.col-to{color:var(--amber);}.col-sn{color:var(--gold-dark);}.col-up{color:var(--g5);}.col-ok{color:var(--green);}
+
+/* COMPLIANCE BAR */
+.cbw{min-width:82px;}
+.cb-pct{font-size:12px;font-weight:800;font-family:'Nunito',sans-serif;}
+.cb{height:5px;background:var(--g1);border-radius:99px;overflow:hidden;margin-top:2px;}
+.cb-fill{height:100%;border-radius:99px;}
+.cb-det{font-size:10px;color:var(--g4);margin-top:2px;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700;font-family:'Nunito',sans-serif;}
+.b-p{background:var(--green-light);color:var(--green);}
+.b-f{background:var(--red-light);color:var(--red);}
+.b-d{background:var(--amber-light);color:var(--amber);}
+.b-n{background:var(--g1);color:var(--g4);}
+.b-nd{background:var(--g1);color:var(--g4);font-style:italic;}
+
+/* COMPLIANCE TABLES */
+.ctw{overflow-x:auto;border-radius:var(--r);border:1.5px solid var(--g2);background:#fff;box-shadow:var(--sh1);}
+.ct{width:100%;border-collapse:collapse;font-size:12.5px;}
+.ct thead th{background:var(--red);color:#fff;padding:9px 13px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;}
+.ct tbody td{padding:10px 13px;border-bottom:1px solid var(--g1);vertical-align:middle;}
+.ct tbody tr:last-child td{border-bottom:none;}
+.ct tbody tr:hover{background:var(--cream2);}
+.big-pct{font-family:'Nunito',sans-serif;font-weight:900;font-size:15px;}
+.wm{display:flex;gap:2px;}
+.wms{width:17px;height:17px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;}
+.wm-p{background:var(--green);color:#fff;}.wm-f{background:var(--red);color:#fff;}.wm-d{background:var(--amber);color:#fff;}.wm-n{background:var(--g1);color:var(--g3);}
+.alert-p{display:inline-flex;align-items:center;gap:3px;background:var(--amber-light);color:#92400e;border-radius:20px;padding:2px 7px;font-size:10px;font-weight:700;}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--green);color:#fff;padding:11px 18px;border-radius:var(--rs);font-weight:700;font-size:13px;font-family:'Nunito',sans-serif;box-shadow:var(--sh2);z-index:999;opacity:0;transform:translateY(16px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.empty{text-align:center;padding:40px 20px;color:var(--g4);}
+.empty .ei{font-size:32px;margin-bottom:8px;}
+</style>
+</head>
+<body>
+
+<div class="sb">
+  <div class="sb-logo">
+    <div class="star">⭐</div>
+    <div class="name">Hamleys</div>
+    <div class="sub">Certified to Play</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="ni on" id="nav-fc" onclick="showPage('fc')"><span class="ic">👤</span>FC Progress</div>
+    <div class="ni" id="nav-store" onclick="showPage('store')"><span class="ic">🏪</span>Store Compliance</div>
+    <div class="ni" id="nav-rom" onclick="showPage('rom')"><span class="ic">📍</span>ROM Compliance</div>
+  </nav>
+  
+</div>
+
+<div class="main">
+  <div class="tb">
+    <div class="tb-title" id="tb-title">FC-wise Progress</div>
+    <div class="src-pill sp-none" id="srcPill"><span id="srcLabel">No data — open Admin to upload</span></div>
+  </div>
+
+  <!-- ═══ FC PAGE ═══════════════════════════════════════════ -->
+  <div class="pg on" id="pg-fc">
+
+    <!-- LANDING (shown when no data loaded yet) -->
+    <div id="fc-landing">
+      <div class="landing">
+        <div class="land-icon">📊</div>
+        <div class="land-title">Dashboard not yet loaded</div>
+        <div class="land-sub">Data is managed by the Hamleys L&D team. If you are seeing this screen, please contact the L&D team to ensure the latest data has been uploaded.<br><br>If you are from the L&D team, please use the Admin page to upload the required Excel files.</div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD (shown after data loads) -->
+    <div id="fc-dash" style="display:none">
+      <div class="hero">
+        <div class="hero-left">
+          <h2>Certified to Play Dashboard</h2>
+          <p>6-week certification tracking — compliance calculated from MS Forms responses</p>
+        </div>
+        <div class="hero-badges">
+          <div class="hb hb-gold"><div class="hb-title">Total FCs</div><div class="hb-num" id="h-total">—</div><div class="hb-sub">In View</div></div>
+          <div class="hb hb-red"><div class="hb-title">Avg Compliance</div><div class="hb-num" id="h-comp">—</div><div class="hb-sub">Active FCs</div></div>
+        </div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="jbar"><div class="jbar-ttl">🏆 6-Zone Journey — Batch Overview</div><div class="jsteps" id="jsteps"></div></div>
+
+      <!-- Date filter -->
+      <div class="dfbar">
+        <label>📅 Filter by DOJ:</label>
+        <div class="presets">
+          <button class="pb on" id="fp-all" onclick="setFP('all')">All Time</button>
+          <button class="pb" id="fp-thismonth" onclick="setFP('thismonth')">This Month</button>
+          <button class="pb" id="fp-lastmonth" onclick="setFP('lastmonth')">Last Month</button>
+          <button class="pb" id="fp-last30" onclick="setFP('last30')">Last 30 Days</button>
+          <button class="pb" id="fp-last60" onclick="setFP('last60')">Last 60 Days</button>
+          <span style="color:var(--g3);padding:0 4px">|</span>
+          <input type="date" id="f-from" onchange="setFP('custom')">
+          <span style="font-size:12px;color:var(--g5);align-self:center">to</span>
+          <input type="date" id="f-to" onchange="setFP('custom')">
+        </div>
+      </div>
+
+      <div class="fbar">
+        <div class="fg"><label>ROM</label><select id="f-rom" onchange="renderFC()"><option value="">All ROMs</option></select></div>
+        <div class="fg"><label>SD</label><select id="f-sd" onchange="renderFC()"><option value="">All SDs</option></select></div>
+        <div class="fg"><label>Store</label><select id="f-store" onchange="renderFC()"><option value="">All Stores</option></select></div>
+        <div class="fg"><label>Status</label>
+          <select id="f-status" onchange="renderFC()">
+            <option value="">All</option>
+            <option value="due">Assessment Due</option>
+            <option value="reassess">Has Reassessment</option>
+            <option value="behind">0% Compliant</option>
+            <option value="ontrack">100% Compliant</option>
+            <option value="certified">Fully Certified (6/6)</option>
+          </select>
+        </div>
+        <div class="fg"><label>Search</label><input type="text" id="f-q" placeholder="Name or Emp Code…" oninput="renderFC()" style="min-width:155px"></div>
+      </div>
+
+      <div class="sh"><div class="sh-title" id="fc-count">—</div></div>
+      <div class="tw"><table>
+        <thead><tr>
+          <th>#</th><th>FC Name</th><th>Store · SD · ROM</th><th>DOJ</th><th>Day 0</th>
+          <th style="text-align:center">Demo</th>
+          <th style="text-align:center">CSD</th>
+          <th style="text-align:center">Product</th>
+          <th style="text-align:center">Selling</th>
+          <th style="text-align:center">VM</th>
+          <th style="text-align:center">Billing</th>
+          <th style="text-align:center">Days</th>
+          <th>Next Due</th>
+          <th style="text-align:center">Ideal</th>
+          <th style="text-align:center">Actual</th>
+          <th>Compliance</th>
+          <th>Status</th>
+        </tr></thead>
+        <tbody id="fc-tbody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- ═══ STORE PAGE ═══════════════════════════════════════ -->
+  <div class="pg" id="pg-store">
+    <div class="dfbar">
+      <label>📅 Filter by DOJ:</label>
+      <div class="presets">
+        <button class="pb on" id="sp-all" onclick="setSP('all')">All Time</button>
+        <button class="pb" id="sp-thismonth" onclick="setSP('thismonth')">This Month</button>
+        <button class="pb" id="sp-lastmonth" onclick="setSP('lastmonth')">Last Month</button>
+        <button class="pb" id="sp-last30" onclick="setSP('last30')">Last 30 Days</button>
+        <button class="pb" id="sp-last60" onclick="setSP('last60')">Last 60 Days</button>
+        <span style="color:var(--g3);padding:0 4px">|</span>
+        <input type="date" id="s-from" onchange="setSP('custom')">
+        <span style="font-size:12px;color:var(--g5);align-self:center">to</span>
+        <input type="date" id="s-to" onchange="setSP('custom')">
+      </div>
+    </div>
+    <div class="fbar">
+      <div class="fg"><label>ROM</label><select id="sf-rom" onchange="renderStore()"><option value="">All ROMs</option></select></div>
+      <div class="fg"><label>SD</label><select id="sf-sd" onchange="renderStore()"><option value="">All SDs</option></select></div>
+    </div>
+    <div class="sh"><div class="sh-title" id="store-count">Store Compliance</div></div>
+    <div class="ctw"><table class="ct"><thead><tr>
+      <th>Store</th><th>SD</th><th>ROM</th>
+      <th style="text-align:center">FCs</th>
+      <th style="text-align:center">Ideal Certs</th>
+      <th style="text-align:center">Actual Certs</th>
+      <th style="text-align:center">Compliance %</th>
+      <th style="text-align:center">Reassess</th>
+      <th style="text-align:center">Due Now</th>
+      <th>Zone Progress</th>
+    </tr></thead><tbody id="store-tbody"></tbody></table></div>
+  </div>
+
+  <!-- ═══ ROM PAGE ═══════════════════════════════════════════ -->
+  <div class="pg" id="pg-rom">
+    <div class="dfbar">
+      <label>📅 Filter by DOJ:</label>
+      <div class="presets">
+        <button class="pb on" id="rp-all" onclick="setRP('all')">All Time</button>
+        <button class="pb" id="rp-thismonth" onclick="setRP('thismonth')">This Month</button>
+        <button class="pb" id="rp-lastmonth" onclick="setRP('lastmonth')">Last Month</button>
+        <button class="pb" id="rp-last30" onclick="setRP('last30')">Last 30 Days</button>
+        <button class="pb" id="rp-last60" onclick="setRP('last60')">Last 60 Days</button>
+        <span style="color:var(--g3);padding:0 4px">|</span>
+        <input type="date" id="r-from" onchange="setRP('custom')">
+        <span style="font-size:12px;color:var(--g5);align-self:center">to</span>
+        <input type="date" id="r-to" onchange="setRP('custom')">
+      </div>
+    </div>
+    <div class="sh"><div class="sh-title">ROM Compliance Overview</div></div>
+    <div class="ctw"><table class="ct"><thead><tr>
+      <th>ROM</th>
+      <th style="text-align:center">Stores</th>
+      <th style="text-align:center">FCs</th>
+      <th style="text-align:center">Ideal Certs</th>
+      <th style="text-align:center">Actual Certs</th>
+      <th style="text-align:center">Compliance %</th>
+      <th style="text-align:center">FCs Passed</th>
+      <th style="text-align:center">Reassess</th>
+      <th style="text-align:center">Due Now</th>
+      <th>SDs</th>
+    </tr></thead><tbody id="rom-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA — embedded by CTP Admin tool on %%GENERATED_AT%%
+// %%FC_COUNT%% FCs · %%RESP_COUNT%% responses
+// ═══════════════════════════════════════════════════
+const DEFAULT_JOINEES = %%JOINEES_DATA%%;
+const DEFAULT_RESPONSES = %%RESPONSES_DATA%%;
+
+// ═══════════════════════════════════════════════════
+// STATE — localStorage overrides default data when L&D uploads fresh Excel
+// ═══════════════════════════════════════════════════
+const TODAY = new Date().toISOString().slice(0,10);
+let JOINEES   = DEFAULT_JOINEES;
+let RESPONSES = DEFAULT_RESPONSES;
+let STORE_MAP = {};
+let D0_OVERRIDE = {};
+let FC_DATA   = [];
+let fcDR={f:null,t:null}, stDR={f:null,t:null}, roDR={f:null,t:null};
+
+// If L&D has uploaded newer data via Admin page, use that instead
+try{const d=localStorage.getItem('ctp_joinees');if(d&&JSON.parse(d).length>0)JOINEES=JSON.parse(d);}catch(e){}
+try{const d=localStorage.getItem('ctp_responses');if(d&&JSON.parse(d).length>0)RESPONSES=JSON.parse(d);}catch(e){}
+try{const d=localStorage.getItem('ctp_store_map');if(d)STORE_MAP=JSON.parse(d);}catch(e){}
+try{D0_OVERRIDE=JSON.parse(localStorage.getItem('ctp_d0')||'{}');}catch(e){}
+
+// ═══════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════
+const ZONES    = ['Demo','CSD','Product','Selling','VM','Billing'];
+const ZICO     = ['🤸','🛒','📦','💰','🖼️','💳'];
+const THR      = [7,15,22,29,36,43];
+
+// ═══════════════════════════════════════════════════
+// DATE HELPERS
+// ═══════════════════════════════════════════════════
+function excelSerial(n){
+  const d=new Date(Date.UTC(1899,11,30));
+  d.setUTCDate(d.getUTCDate()+Math.round(n));
+  return d.toISOString().slice(0,10);
+}
+function parseAnyDate(v){
+  if(v===''||v===null||v===undefined)return'';
+  if(typeof v==='number'&&v>40000)return excelSerial(v);
+  const s=String(v).trim();if(!s)return'';
+  const p=s.split(/[\\/\\-\\.]/);
+  if(p.length===3){
+    if(p[2].length===4)return\`\${p[2]}-\${p[1].padStart(2,'0')}-\${p[0].padStart(2,'0')}\`;
+    if(p[0].length===4)return s.includes('-')?s:\`\${p[0]}-\${p[1].padStart(2,'0')}-\${p[2].padStart(2,'0')}\`;
+  }
+  const d=new Date(s);return isNaN(d)?'':d.toISOString().slice(0,10);
+}
+function addDays(s,n){const d=new Date(s);d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function daysDiff(a,b){return Math.floor((new Date(b)-new Date(a))/864e5);}
+function fmtDate(s){if(!s)return'—';return new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+function fmtShort(s){if(!s)return'—';return new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short'});}
+function nextFriday(s){const d=new Date(s),dow=d.getDay(),diff=(5-dow+7)%7;if(!diff)return s;d.setDate(d.getDate()+diff);return d.toISOString().slice(0,10);}
+function assessDates(day0){
+  if(!day0)return Array(6).fill(null);
+  const out=[nextFriday(addDays(day0,7))];
+  for(let i=1;i<6;i++) out.push(nextFriday(addDays(out[i-1],7)));
+  return out;
+}
+
+
+// ═══════════════════════════════════════════════════
+function normalizeZone(z){
+  const zl=z.toLowerCase().trim();
+  if(zl.includes('demo')) return'Demo';
+  if(zl.includes('csd'))  return'CSD';
+  if(zl.includes('product')) return'Product';
+  if(zl.includes('selling')||zl.includes('sell')) return'Selling';
+  if(zl==='vm'||zl.includes('visual')||zl.includes('merch')) return'VM';
+  if(zl.includes('billing')||zl.includes('bill')) return'Billing';
+  return z;
+}
+
+// ═══════════════════════════════════════════════════
+// BUILD DASHBOARD — merge joinees + responses
+// ═══════════════════════════════════════════════════
+function buildDashboard(){
+  // Merge store map from base store data (if loaded) or from joinees
+  buildStoreMap();
+
+  // For each joinee, compute their certifications from responses
+  FC_DATA = JOINEES.map(fc => {
+    const day0 = D0_OVERRIDE[fc.emp] || fc.day0_date;
+    const days  = day0 ? daysDiff(day0, TODAY) : 0;
+    const ideal = day0 ? THR.filter(t=>days>=t).length : 0;
+    const adates = assessDates(day0);
+
+    // Get all responses for this FC (match by emp code primarily, fallback to name)
+    const fcResp = RESPONSES.filter(r =>
+      (r.fcEmp && r.fcEmp===fc.emp) ||
+      (!r.fcEmp && fuzzyNameMatch(r.fcName, fc.name))
+    );
+
+    // Per zone: if ANY response is Pass → zone = certified
+    // If latest response is Reassessment and no Pass ever → zone = reassess
+    const zoneStatus = {};
+    for(const z of ZONES){
+      const zResp = fcResp.filter(r=>r.zone===z);
+      if(!zResp.length){zoneStatus[z]='none';continue;}
+      const hasPass = zResp.some(r=>r.outcome==='Pass');
+      zoneStatus[z] = hasPass ? 'Pass' : 'Reassessment';
+    }
+
+    // Compute per-week status with day threshold
+    const weeks = ZONES.map((z,i)=>{
+      const zs=zoneStatus[z];
+      const isDue=days>=THR[i];
+      if(zs==='Pass')    return{s:'p',zone:z,date:adates[i]};
+      if(zs==='Reassessment') return{s:'f',zone:z,date:adates[i]};
+      if(isDue)          return{s:'d',zone:z,date:adates[i]};
+      return               {s:'n',zone:z,date:adates[i]};
+    });
+
+    const actual = weeks.filter(w=>w.s==='p').length;
+    const comp   = ideal===0 ? null : actual/ideal;
+
+    // Next cert due
+    let next=null;
+    for(let i=0;i<6;i++){
+      const w=weeks[i];
+      if(w.s==='d'){next={z:ZICO[i]+' '+ZONES[i],date:adates[i],s:'overdue'};break;}
+      if(w.s==='f'){next={z:ZICO[i]+' '+ZONES[i],date:adates[i],s:'reassess'};break;}
+      if(w.s==='n'&&adates[i]){next={z:ZICO[i]+' '+ZONES[i],date:adates[i],s:'upcoming'};break;}
+    }
+    if(!next&&actual===6)next={z:'🏆 Certified!',date:null,s:'done'};
+
+    // Lookup SD/ROM from store map if not on joinee
+    const sm = STORE_MAP[fc.code]||{};
+    const sd  = fc.sd  ||sm.sd  ||'—';
+    const rom = fc.rom ||sm.rom ||'—';
+    const storeName = fc.store||sm.storeName||'—';
+
+    return{...fc,day0,days,adates,ideal,actual,comp,weeks,next,zoneStatus,sd,rom,store:storeName};
+  });
+
+  // Populate dropdowns
+  const roms=[...new Set(FC_DATA.map(d=>d.rom).filter(Boolean))].sort();
+  const sds =[...new Set(FC_DATA.map(d=>d.sd).filter(Boolean))].sort();
+  const sts =[...new Set(FC_DATA.map(d=>d.store).filter(Boolean))].sort();
+  ['f-rom','sf-rom'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.innerHTML='<option value="">All ROMs</option>'+roms.map(r=>\`<option>\${r}</option>\`).join('');});
+  ['f-sd','sf-sd'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.innerHTML='<option value="">All SDs</option>'+sds.map(s=>\`<option>\${s}</option>\`).join('');});
+  const sel=document.getElementById('f-store');if(sel)sel.innerHTML='<option value="">All Stores</option>'+sts.map(s=>\`<option>\${s}</option>\`).join('');
+
+  // Always show dashboard, hide landing
+  document.getElementById('fc-landing').style.display='none';
+  document.getElementById('fc-dash').style.display='block';
+
+  renderAll();
+  toast(\`✅ Dashboard built — \${FC_DATA.length} FCs, \${RESPONSES.length} responses\`);
+}
+
+function buildStoreMap(){
+  // Build from base store data if available, else from joinees
+  if(Object.keys(STORE_MAP).length>0) return;
+  JOINEES.forEach(fc=>{
+    if(fc.code&&fc.sd&&fc.rom){
+      STORE_MAP[fc.code]={sd:fc.sd,rom:fc.rom,storeName:fc.store};
+    }
+  });
+}
+
+function fuzzyNameMatch(a,b){
+  if(!a||!b)return false;
+  const clean=s=>s.toLowerCase().replace(/^(mr\\.|ms\\.|mrs\\.)\\s*/,'').trim();
+  const ca=clean(a),cb=clean(b);
+  return ca===cb||ca.includes(cb)||cb.includes(ca);
+}
+
+// ═══════════════════════════════════════════════════
+// SUMMARY + JOURNEY
+// ═══════════════════════════════════════════════════
+function ccol(c){if(c===null)return'var(--g4)';if(c>=1)return'var(--green)';if(c>=.5)return'var(--gold-dark)';return'var(--red)';}
+
+function renderSummary(data){
+  const tot=data.length,act=data.filter(d=>d.ideal>0);
+  const pass=data.filter(d=>d.actual>0).length;
+  const re=data.filter(d=>d.weeks.some(w=>w.s==='f')).length;
+  const due=data.filter(d=>d.weeks.some(w=>w.s==='d')).length;
+  const avgC=act.length?Math.round(act.reduce((s,d)=>s+(d.comp||0),0)/act.length*100):0;
+  document.getElementById('h-total').textContent=tot;
+  document.getElementById('h-comp').textContent=act.length?avgC+'%':'—';
+  document.getElementById('stats').innerHTML=\`
+    <div class="sc"><div class="sc-lbl">Total FCs</div><div class="sc-val">\${tot}</div><div class="sc-sub">In current view</div></div>
+    <div class="sc"><div class="sc-lbl">Passed ≥1 Zone</div><div class="sc-val sv-g">\${pass}</div><div class="sc-sub">\${tot?Math.round(pass/tot*100):0}% of batch</div></div>
+    <div class="sc"><div class="sc-lbl">Reassessment</div><div class="sc-val sv-r">\${re}</div><div class="sc-sub">Need re-evaluation</div></div>
+    <div class="sc"><div class="sc-lbl">Due This Week</div><div class="sc-val sv-a">\${due}</div><div class="sc-sub">Awaiting assessment</div></div>
+    <div class="sc"><div class="sc-lbl">Avg Compliance</div><div class="sc-val sv-gd">\${act.length?avgC+'%':'—'}</div><div class="sc-sub">Active FCs only</div></div>\`;
+  document.getElementById('jsteps').innerHTML=ZONES.map((z,i)=>{
+    const p=data.filter(f=>f.zoneStatus[z]==='Pass').length;
+    const r=data.filter(f=>f.zoneStatus[z]==='Reassessment').length;
+    const d=data.filter(f=>f.weeks[i]?.s==='d').length;
+    const cls=p>0?'jp':r>0?'jf':d>0?'jd':'jn',sym=p>0?'✓':r>0?'✗':d>0?'!':'·';
+    const stat=p>0?\`\${p} Passed\`:r>0?\`\${r} Reassess\`:d>0?\`\${d} Due\`:'Upcoming';
+    return\`<div class="jstep \${cls}"><div class="jc">\${sym}</div><div class="jlbl">\${ZICO[i]} \${z}</div><div class="jstat">\${stat}</div></div>\`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// DATE RANGE
+// ═══════════════════════════════════════════════════
+function drObj(p,fId,tId){
+  const n=new Date(TODAY);
+  if(p==='all')return{f:null,t:null};
+  if(p==='thismonth')return{f:new Date(n.getFullYear(),n.getMonth(),1).toISOString().slice(0,10),t:new Date(n.getFullYear(),n.getMonth()+1,0).toISOString().slice(0,10)};
+  if(p==='lastmonth')return{f:new Date(n.getFullYear(),n.getMonth()-1,1).toISOString().slice(0,10),t:new Date(n.getFullYear(),n.getMonth(),0).toISOString().slice(0,10)};
+  if(p==='last30')return{f:addDays(TODAY,-30),t:TODAY};
+  if(p==='last60')return{f:addDays(TODAY,-60),t:TODAY};
+  return{f:document.getElementById(fId)?.value||null,t:document.getElementById(tId)?.value||null};
+}
+function applyDR(rows,dr){
+  if(!dr.f&&!dr.t)return rows;
+  return rows.filter(r=>{const d=r.doj_date;if(!d)return true;if(dr.f&&d<dr.f)return false;if(dr.t&&d>dr.t)return false;return true;});
+}
+function setPre(pfx,keys,p){keys.forEach(k=>document.getElementById(pfx+k)?.classList.toggle('on',k===p));}
+function setFP(p){setPre('fp-',['all','thismonth','lastmonth','last30','last60','custom'],p);fcDR=drObj(p,'f-from','f-to');renderFC();}
+function setSP(p){setPre('sp-',['all','thismonth','lastmonth','last30','last60','custom'],p);stDR=drObj(p,'s-from','s-to');renderStore();}
+function setRP(p){setPre('rp-',['all','thismonth','lastmonth','last30','last60','custom'],p);roDR=drObj(p,'r-from','r-to');renderROM();}
+
+// ═══════════════════════════════════════════════════
+// FC TABLE
+// ═══════════════════════════════════════════════════
+function getFiltered(){
+  let d=applyDR([...FC_DATA],fcDR);
+  const rom=document.getElementById('f-rom')?.value;
+  const sd =document.getElementById('f-sd')?.value;
+  const st =document.getElementById('f-store')?.value;
+  const sta=document.getElementById('f-status')?.value;
+  const q  =document.getElementById('f-q')?.value.toLowerCase();
+  if(rom)d=d.filter(x=>x.rom===rom);
+  if(sd) d=d.filter(x=>x.sd===sd);
+  if(st) d=d.filter(x=>x.store===st);
+  if(sta==='due')       d=d.filter(x=>x.weeks.some(w=>w.s==='d'));
+  if(sta==='reassess')  d=d.filter(x=>x.weeks.some(w=>w.s==='f'));
+  if(sta==='behind')    d=d.filter(x=>x.ideal>0&&x.actual===0);
+  if(sta==='ontrack')   d=d.filter(x=>x.comp===1);
+  if(sta==='certified') d=d.filter(x=>x.actual===6);
+  if(q) d=d.filter(x=>x.name?.toLowerCase().includes(q)||x.emp?.includes(q));
+  return d;
+}
+
+function renderFC(){
+  if(!FC_DATA.length)return;
+  const data=getFiltered();
+  renderSummary(data);
+  document.getElementById('fc-count').textContent=\`\${data.length} Fun Consultant\${data.length!==1?'s':''}\`;
+  const dcls={p:'zd-p',f:'zd-f',d:'zd-d',n:'zd-n'},dsym={p:'✓',f:'✗',d:'!',n:'·'};
+  document.getElementById('fc-tbody').innerHTML=!data.length
+    ?\`<tr><td colspan="17"><div class="empty"><div class="ei">🔍</div><p>No FCs match your filters.</p></div></td></tr>\`
+    :data.map(fc=>{
+      const c=fc.comp,cpct=c===null?null:Math.round(c*100);
+      const cEl=c===null?'<span class="badge b-nd">Not due yet</span>'
+        :\`<div class="cbw"><div class="cb-pct" style="color:\${ccol(c)}">\${cpct}%</div><div class="cb"><div class="cb-fill" style="width:\${cpct}%;background:\${ccol(c)}"></div></div><div class="cb-det">\${fc.actual}/\${fc.ideal} zones</div></div>\`;
+      let ncEl='<span class="badge b-n">—</span>';
+      if(fc.next){
+        const nc=fc.next;
+        if(nc.s==='done')ncEl=\`<div><div class="nc-z col-ok">🏆 Certified!</div></div>\`;
+        else{
+          const dtd=nc.date?daysDiff(TODAY,nc.date):null;
+          const cls2=nc.s==='overdue'||nc.s==='reassess'?'col-od':dtd!==null&&dtd<=3?'col-to':dtd!==null&&dtd<=7?'col-sn':'col-up';
+          const dstr=nc.s==='overdue'?'⚡ Overdue':nc.s==='reassess'?'⚡ Reassess':nc.date?\`by \${fmtShort(nc.date)}\`:'';
+          ncEl=\`<div><div class="nc-z \${cls2}">\${nc.z}</div><div class="nc-d">\${dstr}</div></div>\`;
+        }
+      }
+      const hasF=fc.weeks.some(w=>w.s==='f'),hasD=fc.weeks.some(w=>w.s==='d');
+      const stEl=hasF?'<span class="badge b-f">✗ Reassessment</span>'
+        :hasD?'<span class="badge b-d">⚡ Due</span>'
+        :fc.ideal===0?'<span class="badge b-nd">Not yet due</span>'
+        :c===1?'<span class="badge b-p">✓ On Track</span>'
+        :c>0?'<span class="badge b-d">Partial</span>'
+        :'<span class="badge b-n">Pending</span>';
+      return\`<tr>
+        <td style="color:var(--g4);font-size:11px">\${fc.sr}</td>
+        <td><div class="fc-name">\${fc.name}</div><div class="fc-emp">\${fc.emp}</div></td>
+        <td><div class="fc-meta">\${fc.store}</div><div class="fc-meta">SD: \${fc.sd} · ROM: \${fc.rom}</div></td>
+        <td style="font-size:11.5px;color:var(--g5)">\${fmtDate(fc.doj_date)}</td>
+        <td style="font-size:12px;font-weight:700">\${fmtDate(fc.day0)}</td>
+        \${fc.weeks.map((w,i)=>{
+          const tip=\`\${ZONES[i]}: \${w.s==='p'?'PASS':w.s==='f'?'REASSESS':w.s==='d'?'DUE':'PENDING'}\${w.date?' · '+fmtShort(w.date):''}\`;
+          return\`<td style="text-align:center"><div class="zdots"><div class="zd \${dcls[w.s]}" data-tip="\${tip}">\${dsym[w.s]}</div></div></td>\`;
+        }).join('')}
+        <td style="text-align:center;font-size:11.5px;color:var(--g5)">\${fc.days}d</td>
+        <td>\${ncEl}</td>
+        <td style="text-align:center;font-weight:700">\${fc.ideal}</td>
+        <td style="text-align:center;font-weight:700">\${fc.actual}</td>
+        <td>\${cEl}</td>
+        <td>\${stEl}</td>
+      </tr>\`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// STORE TABLE
+// ═══════════════════════════════════════════════════
+function renderStore(){
+  const romF=document.getElementById('sf-rom')?.value,sdF=document.getElementById('sf-sd')?.value;
+  let data=applyDR([...FC_DATA],stDR);
+  if(romF)data=data.filter(d=>d.rom===romF);
+  if(sdF) data=data.filter(d=>d.sd===sdF);
+  const map={};
+  data.forEach(fc=>{
+    if(!map[fc.store])map[fc.store]={store:fc.store,code:fc.code||'',sd:fc.sd,rom:fc.rom,fcs:[]};
+    map[fc.store].fcs.push(fc);
+  });
+  const rows=Object.values(map).sort((a,b)=>a.store.localeCompare(b.store));
+  document.getElementById('store-count').textContent=\`\${rows.length} Store\${rows.length!==1?'s':''}\`;
+  document.getElementById('store-tbody').innerHTML=!rows.length
+    ?\`<tr><td colspan="10"><div class="empty"><div class="ei">🏪</div><p>No store data.</p></div></td></tr>\`
+    :rows.map(s=>{
+      const fcs=s.fcs;
+      const ti=fcs.reduce((a,f)=>a+f.ideal,0),ta=fcs.reduce((a,f)=>a+f.actual,0);
+      const c=ti===0?null:ta/ti;
+      const re=fcs.filter(f=>f.weeks.some(w=>w.s==='f')).length;
+      const due=fcs.filter(f=>f.weeks.some(w=>w.s==='d')).length;
+      const col=c===null?'var(--g4)':ccol(c);
+      const wkm=ZONES.map((z,i)=>{
+        const p=fcs.filter(f=>f.zoneStatus[z]==='Pass').length;
+        const r=fcs.filter(f=>f.zoneStatus[z]==='Reassessment').length;
+        const d=fcs.filter(f=>f.weeks[i]?.s==='d').length;
+        return\`<div class="wms \${p>0?'wm-p':r>0?'wm-f':d>0?'wm-d':'wm-n'}" title="\${z}: \${p} passed">\${p||''}</div>\`;
+      }).join('');
+      return\`<tr>
+        <td><div style="font-weight:700;font-family:'Nunito',sans-serif">\${s.store}</div><div style="font-size:10.5px;color:var(--g4)">\${s.code}</div></td>
+        <td style="font-size:12.5px">\${s.sd}</td>
+        <td style="font-size:12.5px">\${s.rom}</td>
+        <td style="text-align:center;font-weight:700">\${fcs.length}</td>
+        <td style="text-align:center;font-weight:700">\${ti}</td>
+        <td style="text-align:center;font-weight:700">\${ta}</td>
+        <td style="text-align:center"><span class="big-pct" style="color:\${col}">\${c===null?'—':Math.round(c*100)+'%'}</span></td>
+        <td style="text-align:center">\${re>0?\`<span class="badge b-f">\${re}</span>\`:'<span style="color:var(--g3)">—</span>'}</td>
+        <td style="text-align:center">\${due>0?\`<span class="alert-p">⚡ \${due}</span>\`:'<span style="color:var(--g3)">—</span>'}</td>
+        <td><div class="wm">\${wkm}</div></td>
+      </tr>\`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// ROM TABLE
+// ═══════════════════════════════════════════════════
+function renderROM(){
+  let data=applyDR([...FC_DATA],roDR);
+  const map={};
+  data.forEach(fc=>{
+    if(!map[fc.rom])map[fc.rom]={rom:fc.rom,fcs:[],stores:new Set(),sds:new Set()};
+    map[fc.rom].fcs.push(fc);map[fc.rom].stores.add(fc.store);map[fc.rom].sds.add(fc.sd);
+  });
+  const rows=Object.values(map).sort((a,b)=>a.rom.localeCompare(b.rom));
+  document.getElementById('rom-tbody').innerHTML=!rows.length
+    ?\`<tr><td colspan="10"><div class="empty"><div class="ei">📍</div><p>No ROM data.</p></div></td></tr>\`
+    :rows.map(r=>{
+      const fcs=r.fcs;
+      const ti=fcs.reduce((a,f)=>a+f.ideal,0),ta=fcs.reduce((a,f)=>a+f.actual,0);
+      const c=ti===0?null:ta/ti;
+      const pass=fcs.filter(f=>f.actual>0).length;
+      const re=fcs.filter(f=>f.weeks.some(w=>w.s==='f')).length;
+      const due=fcs.filter(f=>f.weeks.some(w=>w.s==='d')).length;
+      const col=c===null?'var(--g4)':ccol(c);
+      return\`<tr>
+        <td style="font-weight:700;font-family:'Nunito',sans-serif;font-size:13px">\${r.rom}</td>
+        <td style="text-align:center;font-weight:700">\${r.stores.size}</td>
+        <td style="text-align:center;font-weight:700">\${fcs.length}</td>
+        <td style="text-align:center;font-weight:700">\${ti}</td>
+        <td style="text-align:center;font-weight:700">\${ta}</td>
+        <td style="text-align:center"><span class="big-pct" style="color:\${col};font-size:16px">\${c===null?'—':Math.round(c*100)+'%'}</span></td>
+        <td style="text-align:center"><span class="badge b-p">\${pass}</span></td>
+        <td style="text-align:center">\${re>0?\`<span class="badge b-f">\${re}</span>\`:'—'}</td>
+        <td style="text-align:center">\${due>0?\`<span class="alert-p">⚡ \${due}</span>\`:'—'}</td>
+        <td style="font-size:11.5px;color:var(--g5)">\${[...r.sds].sort().join(', ')}</td>
+      </tr>\`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// PAGE SWITCHING
+// ═══════════════════════════════════════════════════
+const PT={fc:'FC-wise Progress',store:'Store Compliance',rom:'ROM Compliance'};
+function showPage(name){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  document.getElementById('pg-'+name)?.classList.add('on');
+  document.getElementById('nav-'+name)?.classList.add('on');
+  document.getElementById('tb-title').textContent=PT[name]||'';
+  if(name==='store')renderStore();
+  if(name==='rom')  renderROM();
+}
+function renderAll(){renderFC();if(document.getElementById('pg-store').classList.contains('on'))renderStore();if(document.getElementById('pg-rom').classList.contains('on'))renderROM();}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3800);}
+
+// ═══════════════════════════════════════════════════
+// INIT — always show data (embedded default or localStorage upload)
+// ═══════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  // Data is always available (embedded default data as fallback)
+  // localStorage overrides when L&D uploads fresh Excel via Admin page
+  buildDashboard();
+  const src = localStorage.getItem('ctp_joinees_src');
+  const ts  = localStorage.getItem('ctp_joinees_ts');
+  const pill = document.getElementById('srcPill');
+  if(src && localStorage.getItem('ctp_joinees')) {
+    pill.className = 'src-pill sp-ok';
+    document.getElementById('srcLabel').textContent = \`📊 \${src}\${ts?' · '+ts:''}\`;
+  } else {
+    pill.className = 'src-pill sp-ok';
+    document.getElementById('srcLabel').textContent = \`📊 Embedded data · June 2026 batch\`;
+  }
+});
+</script>
+</body>
+</html>
+`;
+</script>
+</body>
+</html>
