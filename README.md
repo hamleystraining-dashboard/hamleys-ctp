@@ -1,95 +1,66 @@
-# ⭐ Hamleys — Certified to Play Dashboard
+# Hamleys — Certified to Play Dashboard V2
 
-Live compliance tracking for the 6-week **Certified to Play** certification programme for new Fun Consultants across Hamleys stores.
+## V2 principle
+The generated `index.html` is the single source of truth for the public dashboard. It does not read joinee or response data from browser `localStorage`. This prevents an older browser dataset from overriding a newly generated dashboard.
 
 ## Files
-
-| File | Purpose |
-|---|---|
-| `index.html` | Main dashboard — FC Progress, Store Compliance and ROM Compliance |
-| `ctp_admin.html` | L&D Admin tool — upload, normalize, merge, deduplicate and generate the dashboard |
-| `README.md` | Operating guide and architecture |
-
-## Weekly workflow
-
-1. Download the latest **FC/Joinee Report** (`CertifiedToPlay_Reports.xlsx`).
-2. Download the latest **new branching-form response sheet**.
-3. Open `ctp_admin.html`.
-4. Upload the FC/Joinee Report.
-5. Upload the new-form response sheet.
-6. The Admin tool automatically:
-   - retains the permanent **271 historical responses**;
-   - retains previously processed new responses in browser storage;
-   - detects the response-sheet schema;
-   - normalizes the new branching-form structure;
-   - derives **Assessor Name** from the selected SD;
-   - derives **Store Code** from the embedded Base Store Data;
-   - merges historical + previous + newly uploaded responses;
-   - deduplicates by unique **Id**.
-7. Click **Generate New index.html**.
-8. Upload the generated `index.html` to GitHub.
+- `index.html` — public GitHub Pages dashboard
+- `ctp_admin.html` — L&D-only generator
+- `README.md` — operating guide
 
 ## Permanent historical baseline
+The Admin permanently contains the 271 old-form historical responses. Every generation starts with these protected records.
 
-The final 271 responses from the old Microsoft Form are permanently embedded inside `ctp_admin.html`.
+## Supported response sheets
+The Admin accepts the old flat form and the new branching Microsoft Form.
 
-This means:
+For the new form:
+- `ROM Name` is read directly
+- the populated `X's SDs` / `X’s SDs` branch becomes Assessor Name
+- the populated `X's Stores` / `X’s Stores` branch becomes Store Name
+- Store Code is derived from Base Store Data
 
-- the old 271 responses are never dependent on the new form export;
-- clearing browser storage does **not** remove the historical baseline;
-- every Master Dataset is rebuilt on top of those 271 protected records.
+The dashboard's normalized response structure and compliance logic remain unchanged.
 
-## New branching-form structure
+## Optional Base Store Data upload
+The Admin contains an embedded fallback mapping.
 
-The new form follows:
+Upload Base Store Data only when Store / SD / ROM mappings change. If uploaded, the new mapping becomes active for that Admin session and is used to normalize the branching-form responses.
 
-**ROM → mapped SDs → mapped Stores**
+Expected columns:
+- Store Name
+- Store Code
+- ROM Name
+- SD Name
 
-The raw response sheet contains:
+If no Base Store Data is uploaded, the embedded mapping is used.
 
-- `ROM Name`
-- six ROM-specific `X's SDs` columns
-- eighteen SD-specific `X's Stores` columns
-- the unchanged FC and assessment fields
+## Weekly workflow
+1. Open `ctp_admin.html`.
+2. Upload the latest FC/Joinee Report.
+3. Optional: upload latest Base Store Data if mappings changed.
+4. Upload the latest **cumulative** Microsoft Forms response export.
+5. Confirm the Admin summary: joinee count, uploaded response count and Master Dataset count.
+6. Review/adjust Day 0 if required.
+7. Generate and download `index.html`.
+8. Replace GitHub's existing `index.html` with the newly generated file.
+9. Wait for GitHub Pages deployment and hard-refresh the dashboard.
 
-For each submitted row, only one SD branch and one Store branch should contain a value.
+## Master Dataset
+`271 permanent historical responses + latest cumulative response export = Master Dataset`
 
-The Admin tool converts the new structure back into the same internal structure used by the dashboard:
+Records are deduplicated by unique `Id`.
 
-- selected SD → `Assessor Name`
-- selected Store → `Store Name`
-- embedded Base Store Data lookup → `Store Code`
-- all FC, assessment, zone, outcome and certification fields remain unchanged
+Because the new response export is cumulative, no browser storage or separate Master file is required.
 
-The dashboard UI, columns and compliance calculations remain unchanged.
+## Dashboard validation
+The top-right badge shows:
 
-## Master Dataset logic
+`Embedded data - X joinees | Y responses`
 
-The Admin tool uses:
-
-**Permanent 271 historical responses  
-+ retained previous new-form responses  
-+ latest uploaded new-form responses  
-= Master Response Dataset**
-
-The merged dataset is deduplicated by `Id`.
-
-If the same response is uploaded again, it is not double-counted.
-
-## Embedded Base Store Data
-
-The current 116-store mapping is embedded inside `ctp_admin.html`:
-
-**Store Name → Store Code → ROM Name → SD Name**
-
-This mapping is used to restore `Store Code` for the new branching-form responses.
-
-If the store network or mappings change materially, regenerate the Admin tool with the latest Base Store Data.
+`X` must equal the joinee count shown in Admin immediately before generation.
 
 ## Compliance logic — unchanged
-
-Ideal certifications are based on days elapsed since Day 0:
-
 | Days since Day 0 | Zone | Ideal certifications |
 |---|---|---:|
 | 7+ | Demo | 1 |
@@ -100,17 +71,11 @@ Ideal certifications are based on days elapsed since Day 0:
 | 43+ | Billing | 6 |
 
 For each FC × Zone:
+- any Pass means certified
+- repeated Pass records count as one certification
+- Reassessment without a Pass means not certified
 
-- any `Pass` means the zone is certified;
-- multiple passes for the same FC × Zone still count as 1;
-- `Reassessment` without a later pass counts as not certified.
+`Compliance % = Actual Certifications / Ideal Certifications × 100`
 
-**Compliance % = Actual Certifications ÷ Ideal Certifications × 100**
-
-## Deployment
-
-For the public GitHub Pages dashboard, upload the generated file as:
-
-`index.html`
-
-Keep `ctp_admin.html` restricted to the L&D team because it contains the permanent historical baseline and the embedded store mapping.
+## Security
+Keep `ctp_admin.html` restricted to L&D because it contains the permanent historical baseline and embedded store mapping.
