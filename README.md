@@ -1,89 +1,97 @@
-```markdown
 # ⭐ Hamleys — Certified to Play Dashboard
 
-Live compliance tracking for the 6-week **Certified to Play** certification programme for all new Fun Consultants across Hamleys stores.
+Live compliance tracking for the 6-week **Certified to Play** certification programme for new Fun Consultants across Hamleys stores.
 
----
-
-## 🔗 Live Links
-
-| Page | URL |
-|------|-----|
-| 📊 **Dashboard** | `https://hamleystraining-dashboard.github.io/hamleys-ctp/` |
-| ⚙️ **Admin / Upload** | `https://hamleystraining-dashboard.github.io/hamleys-ctp/ctp_admin.html` |
-
----
-
-## 📁 Files in This Repo
+## Files
 
 | File | Purpose |
-|------|---------|
-| `index.html` | Main dashboard — FC Progress, Store Compliance, ROM Compliance (unchanged) |
-| `ctp_admin.html` | Admin page — Upload Excel files, auto-normalize new form schema, maintain Master Dataset, Set Day 0 per FC |
-| `data/responses.json` | Placeholder for future Power Automate live feed |
-| `README.md` | This file |
+|---|---|
+| `index.html` | Main dashboard — FC Progress, Store Compliance and ROM Compliance |
+| `ctp_admin.html` | L&D Admin tool — upload, normalize, merge, deduplicate and generate the dashboard |
+| `README.md` | Operating guide and architecture |
 
----
+## Weekly workflow
 
-## 🆕 New MS Forms Structure (Branching Form)
+1. Download the latest **FC/Joinee Report** (`CertifiedToPlay_Reports.xlsx`).
+2. Download the latest **new branching-form response sheet**.
+3. Open `ctp_admin.html`.
+4. Upload the FC/Joinee Report.
+5. Upload the new-form response sheet.
+6. The Admin tool automatically:
+   - retains the permanent **271 historical responses**;
+   - retains previously processed new responses in browser storage;
+   - detects the response-sheet schema;
+   - normalizes the new branching-form structure;
+   - derives **Assessor Name** from the selected SD;
+   - derives **Store Code** from the embedded Base Store Data;
+   - merges historical + previous + newly uploaded responses;
+   - deduplicates by unique **Id**.
+7. Click **Generate New index.html**.
+8. Upload the generated `index.html` to GitHub.
 
-To reduce SD scroll-fatigue on a 120-store dropdown, the form now branches:
-**ROM → SD (mapped to that ROM) → Store (mapped to that SD)**.
+## Permanent historical baseline
 
-This means the raw responses sheet no longer has a single `Store Name` / `Store Code` / `Assessors Name` column — instead it has:
-- 6 "X's SDs" columns (one per ROM: Divya, Shirish, Ashlin, Ajay, Chetan, Lalit)
-- 18 "X's Stores" columns (one per SD)
+The final 271 responses from the old Microsoft Form are permanently embedded inside `ctp_admin.html`.
 
-**Only one SD column and one Store column will be non-empty per row**, since each respondent only ever sees their own branch.
+This means:
 
-The Admin tool automatically detects this new schema and **normalizes** it back to the original shape before any calculation happens — see "How the Admin Tool Handles This" below. No manual conversion is required, and `index.html`'s logic, columns, and calculations are **completely unchanged**.
+- the old 271 responses are never dependent on the new form export;
+- clearing browser storage does **not** remove the historical baseline;
+- every Master Dataset is rebuilt on top of those 271 protected records.
 
----
+## New branching-form structure
 
-## 🚀 How to Use (Weekly Workflow — Unchanged for You)
+The new form follows:
 
-### Every time responses are updated:
-1. Download **CertifiedToPlay_Reports.xlsx** from SharePoint (joinees + Day 0)
-2. Download **Certified_To_Play.xlsx** from SharePoint (MS Forms responses — new branched schema)
-3. Open the **Admin page** → Upload Files tab
-4. Upload both Excel files directly (no CSV conversion, no manual editing needed)
-5. Click **Open Dashboard →** — compliance recalculates instantly, using historical + new data combined
+**ROM → mapped SDs → mapped Stores**
 
-### One-time setup (already done once):
-- Historical `Certified_To_Play.xlsx` (271 legacy rows) seeded once into the Admin tool's persistent Master Dataset
-- **Base_Store_Data.xlsx** uploaded for complete Store → ROM → SD mapping (also used to resolve Store Code for new-schema rows)
+The raw response sheet contains:
 
----
+- `ROM Name`
+- six ROM-specific `X's SDs` columns
+- eighteen SD-specific `X's Stores` columns
+- the unchanged FC and assessment fields
 
-## 🧠 How the Admin Tool Handles This (Behind the Scenes)
+For each submitted row, only one SD branch and one Store branch should contain a value.
 
-1. **Schema detection** — on each upload, the tool checks for old-schema columns (`Store Name`, `Store Code`, `Assessors Name`) vs new-schema columns (`Divya's SDs`, `Ashlin's Stores`, etc.).
-2. **Normalization** (new schema only) — for each row:
-   - `Assessor Name` = the one non-empty value among the 6 "X's SDs" columns
-   - `Store Name` = the one non-empty value among the 18 "X's Stores" columns
-   - `Store Code` = looked up from `Base_Store_Data.xlsx` using the resolved Store Name
-   - All other fields (FC Name, Emp Code, DOJ, Assessment Type, Zone, Outcome, Cert Date, Areas of Improvement, Photo) pass through unchanged
-3. **Merge into Master Dataset** — normalized rows are merged into a persistent Master Dataset (stored in the browser), **deduped by `Id`**, so re-uploads never double-count and the original 271 historical rows are never lost or re-entered.
-4. **Everything downstream** (Emp Code/fuzzy-name matching, ideal/actual cert calculation, Generate → `index.html`) runs on the full merged Master Dataset, exactly as before.
+The Admin tool converts the new structure back into the same internal structure used by the dashboard:
 
----
+- selected SD → `Assessor Name`
+- selected Store → `Store Name`
+- embedded Base Store Data lookup → `Store Code`
+- all FC, assessment, zone, outcome and certification fields remain unchanged
 
-## 🏁 How Compliance Works (Unchanged)
+The dashboard UI, columns and compliance calculations remain unchanged.
 
-### The three input files:
+## Master Dataset logic
 
-| File | What it provides |
-|------|-----------------|
-| `CertifiedToPlay_Reports.xlsx` | FC master list — Name, Emp Code, Store, SD, ROM, DOJ, **Day 0** |
-| `Certified_To_Play.xlsx` | MS Forms responses — FC Name, Emp Code, Zone, Outcome, Certification Date (normalized internally if new schema) |
-| `Base_Store_Data.xlsx` | Store Code ↔ ROM Name + SD Name mapping |
+The Admin tool uses:
 
-### Calculation logic:
+**Permanent 271 historical responses  
++ retained previous new-form responses  
++ latest uploaded new-form responses  
+= Master Response Dataset**
 
-**Ideal Certifications (denominator)** — based on days elapsed since Day 0:
+The merged dataset is deduplicated by `Id`.
 
-| Days Since Day 0 | Zone | Ideal Certs |
-|---|---|---|
+If the same response is uploaded again, it is not double-counted.
+
+## Embedded Base Store Data
+
+The current 116-store mapping is embedded inside `ctp_admin.html`:
+
+**Store Name → Store Code → ROM Name → SD Name**
+
+This mapping is used to restore `Store Code` for the new branching-form responses.
+
+If the store network or mappings change materially, regenerate the Admin tool with the latest Base Store Data.
+
+## Compliance logic — unchanged
+
+Ideal certifications are based on days elapsed since Day 0:
+
+| Days since Day 0 | Zone | Ideal certifications |
+|---|---|---:|
 | 7+ | Demo | 1 |
 | 15+ | CSD | 2 |
 | 22+ | Product | 3 |
@@ -91,38 +99,18 @@ The Admin tool automatically detects this new schema and **normalizes** it back 
 | 36+ | VM | 5 |
 | 43+ | Billing | 6 |
 
-**Actual Certifications (numerator)** — from responses sheet:
-- For each FC × Zone combination: if **any** response row has Outcome = "Pass" → that zone is certified (= 1)
-- Multiple "Pass" entries for the same FC + Zone = still counts as 1
-- "Reassessment" only entries for a zone = 0 (not certified)
-- Zones: Demo · CSD · Product · Selling · VM · Billing
+For each FC × Zone:
 
-**Compliance % = Actual ÷ Ideal × 100**
+- any `Pass` means the zone is certified;
+- multiple passes for the same FC × Zone still count as 1;
+- `Reassessment` without a later pass counts as not certified.
 
-- FC with 0 ideal → "Not yet due"
-- FC with 6/6 → "🏆 Fully Certified"
+**Compliance % = Actual Certifications ÷ Ideal Certifications × 100**
 
----
+## Deployment
 
-## ⚙️ Day 0 Settings
+For the public GitHub Pages dashboard, upload the generated file as:
 
-- **Day 0** = official start of the FC's 6-week journey (col L in Reports sheet)
-- Always set to a **Friday** so all assessment dates align to Fridays
-- Assessment dates: W1 = Day 0 + 7, W2 = +14, W3 = +21, W4 = +28, W5 = +35, W6 = +42
-- Day 0 can be overridden per FC on the Admin page without editing Excel
+`index.html`
 
----
-
-## 🗄️ Master Dataset & Backup
-
-- The Admin tool maintains a persistent **Master Dataset** in the browser (`localStorage`), seeded once with the 271 historical rows, and growing weekly with normalized new-schema rows.
-- Use **"Export Master Backup"** on the Admin page after each Generate — downloads the full merged dataset as `.xlsx`. Keep this safe; clearing browser data on the admin laptop would otherwise wipe the in-browser Master Dataset.
-- **"Reset Master Data"** is available for a full re-seed, if ever required.
-
----
-
-## 🔮 Future: Power Automate Live Data
-
-When ready, configure Power Automate to:
-1. Trigger on every MS Forms submission
-2. Read
+Keep `ctp_admin.html` restricted to the L&D team because it contains the permanent historical baseline and the embedded store mapping.
